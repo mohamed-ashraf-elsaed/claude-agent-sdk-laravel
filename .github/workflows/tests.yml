@@ -10,6 +10,7 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         php: ['8.1', '8.2', '8.3', '8.4']
         laravel: ['10.*', '11.*', '12.*']
@@ -28,7 +29,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          coverage: xdebug
+          coverage: none
 
       - name: Install dependencies
         run: |
@@ -36,7 +37,7 @@ jobs:
           composer install --no-interaction --prefer-dist
 
       - name: Run tests
-        run: vendor/bin/phpunit --coverage-text
+        run: vendor/bin/phpunit --no-coverage
 
   code-style:
     runs-on: ubuntu-latest
@@ -45,5 +46,6 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
+          coverage: none
       - run: composer install --no-interaction
-      - run: vendor/bin/phpunit --testdox
+      - run: vendor/bin/phpunit --no-coverage --testdox
