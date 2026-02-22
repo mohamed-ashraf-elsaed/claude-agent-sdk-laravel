@@ -39,7 +39,7 @@ class ExceptionTest extends TestCase
         $prev = new RuntimeException('bad json');
         $e = new JsonParseException('{invalid', $prev);
 
-        $this->assertSame('{invalid', $e->line);
+        $this->assertSame('{invalid', $e->rawLine);
         $this->assertSame($prev, $e->originalError);
         $this->assertStringContainsString('{invalid', $e->getMessage());
     }
