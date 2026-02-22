@@ -136,6 +136,7 @@ class ProcessTransport
         $args = array_merge($args, $options->toCliArgs());
 
         // Add the prompt
+        $args[] = '--verbose';
         $args[] = '--print';
         $args[] = $prompt;
 
