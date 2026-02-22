@@ -1,15 +1,7 @@
 {
   "name": "mohamed-ashraf-elsaed/claude-agent-sdk-laravel",
   "description": "Laravel SDK for Claude Agent — build AI agents with Claude Code as a library",
-  "keywords": [
-    "laravel",
-    "claude",
-    "ai",
-    "agent",
-    "anthropic",
-    "sdk",
-    "claude-code"
-  ],
+  "keywords": ["laravel", "claude", "ai", "agent", "anthropic", "sdk", "claude-code"],
   "license": "MIT",
   "authors": [
     {
