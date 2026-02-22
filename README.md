@@ -15,7 +15,7 @@ Build AI agents with Claude Code as a library in your Laravel applications. This
 
 ## Installation
 ```bash
-composer require your-vendor/claude-agent-sdk-laravel
+composer require mohamed-ashraf-elsaed/claude-agent-sdk-laravel
 ```
 
 Publish the config:
