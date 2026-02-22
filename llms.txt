@@ -1,0 +1,42 @@
+# Claude Agent SDK for Laravel
+
+> Laravel SDK for Claude Code — build AI agents with Claude Code as a library in PHP/Laravel applications.
+
+## Overview
+
+This package wraps the Claude Code CLI to provide a fluent PHP/Laravel interface for building AI agents. It supports file operations, bash commands, code editing, web search, subagents, MCP servers, structured JSON output, session management, and streaming.
+
+## Install
+
+composer require mohamed-ashraf-elsaed/claude-agent-sdk-laravel
+
+## Requirements
+
+- PHP 8.1+
+- Laravel 10, 11, or 12
+- Claude Code CLI: npm install -g @anthropic-ai/claude-code
+- Anthropic API key
+
+## Quick Start
+
+use ClaudeAgentSDK\Facades\ClaudeAgent;
+
+$result = ClaudeAgent::query('What files are in this directory?');
+echo $result->text();
+
+## Key Features
+
+- Fluent options builder (ClaudeAgentOptions)
+- Streaming with real-time message processing
+- Subagents for task delegation
+- MCP server integration (stdio + SSE)
+- Structured output with JSON schema validation
+- Session resumption and forking
+- Full message/content block parsing
+- Laravel service provider, facade, and config publishing
+
+## Links
+
+- Packagist: https://packagist.org/packages/mohamed-ashraf-elsaed/claude-agent-sdk-laravel
+- GitHub: https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel
+- Documentation: https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel/wiki

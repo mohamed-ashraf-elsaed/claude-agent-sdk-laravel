@@ -1,0 +1,99 @@
+# Claude Agent SDK for Laravel — Full Reference
+
+## Package Name
+mohamed-ashraf-elsaed/claude-agent-sdk-laravel
+
+## What It Does
+A Laravel package that wraps the Claude Code CLI, allowing developers to build AI-powered agents directly in PHP/Laravel. The SDK communicates with Claude Code via subprocess, parses streaming JSON output, and provides a fluent PHP API.
+
+## Installation
+composer require mohamed-ashraf-elsaed/claude-agent-sdk-laravel
+php artisan vendor:publish --tag=claude-agent-config
+
+## Environment
+ANTHROPIC_API_KEY=your-key
+
+## Core Classes
+
+### ClaudeAgentManager
+Main entry point. Methods:
+- query(string $prompt, $options = null): QueryResult
+- stream(string $prompt, $options = null): Generator<Message>
+- streamCollect(string $prompt, ?callable $onMessage, $options = null): QueryResult
+- withOptions($options): static
+- stop(): void
+
+### ClaudeAgentOptions (Fluent Builder)
+ClaudeAgentOptions::make()
+  ->tools(['Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob'])
+  ->disallow(['WebFetch'])
+  ->model('claude-sonnet-4-5-20250929')
+  ->permission('acceptEdits')  // default | acceptEdits | dontAsk | bypassPermissions
+  ->maxTurns(10)
+  ->cwd('/path/to/project')
+  ->systemPrompt('You are a PHP expert')
+  ->useClaudeCodePrompt('Extra instructions')
+  ->resume('session_id', fork: true)
+  ->outputFormat($jsonSchema)
+  ->mcpServer('name', McpServerConfig::stdio('npx', ['server']))
+  ->agent('name', new AgentDefinition('desc', 'prompt', ['tools']))
+  ->env('KEY', 'value')
+  ->sandbox(['type' => 'docker'])
+  ->plugin('/path/to/plugin')
+
+### QueryResult
+- text(): ?string — final result text
+- structured(): ?array — JSON schema output
+- isSuccess(): bool
+- isError(): bool
+- costUsd(): ?float
+- turns(): int
+- durationMs(): int
+- sessionId: ?string
+- assistantMessages(): AssistantMessage[]
+- fullText(): string
+- toolUses(): ToolUseBlock[]
+
+### Message Types
+- AssistantMessage — text(), toolUses(), $id, $model, $parentToolUseId
+- SystemMessage — $subtype, $sessionId, isInit()
+- ResultMessage — $subtype, $result, $totalCostUsd, $numTurns, isSuccess()
+- UserMessage — $content, $uuid
+- GenericMessage — catch-all for unknown types
+
+### Content Blocks
+- TextBlock — $text
+- ThinkingBlock — $thinking, $signature
+- ToolUseBlock — $id, $name, $input
+- ToolResultBlock — $toolUseId, $content, $isError
+
+### AgentDefinition (Subagents)
+new AgentDefinition(
+  description: 'Security reviewer',
+  prompt: 'Find vulnerabilities',
+  tools: ['Read', 'Grep'],
+  model: 'sonnet'
+)
+
+### McpServerConfig
+McpServerConfig::stdio('npx', ['@mcp/server-db'], ['DB_URL' => '...'])
+McpServerConfig::sse('http://localhost:3000/mcp', ['Authorization' => 'Bearer ...'])
+
+### Exceptions
+- ClaudeAgentException (base)
+- CliNotFoundException — CLI binary not found
+- ProcessException — $exitCode, $stderr
+- JsonParseException — $rawLine, $originalError
+
+## Facade
+use ClaudeAgentSDK\Facades\ClaudeAgent;
+ClaudeAgent::query('...');
+
+## Config
+php artisan vendor:publish --tag=claude-agent-config
+Config file: config/claude-agent.php
+
+## Supported
+- PHP 8.1, 8.2, 8.3, 8.4
+- Laravel 10, 11, 12
+- Providers: Anthropic API, AWS Bedrock, Google Vertex, Azure Foundry
