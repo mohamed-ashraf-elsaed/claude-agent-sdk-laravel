@@ -1,0 +1,45 @@
+{
+  "name": "MohamedAshrafElsaed/claude-agent-sdk-laravel",
+  "description": "Laravel SDK for Claude Agent — build AI agents with Claude Code as a library",
+  "keywords": ["laravel", "claude", "ai", "agent", "anthropic", "sdk"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Mohamed Ashraf",
+      "email": "m.ashraf.saed@gmail.com"
+    }
+  ],
+  "require": {
+    "php": "^8.1|^8.2|^8.3|^8.4",
+    "illuminate/support": "^10.0|^11.0|^12.0",
+    "illuminate/contracts": "^10.0|^11.0|^12.0",
+    "symfony/process": "^6.0|^7.0"
+  },
+  "require-dev": {
+    "orchestra/testbench": "^8.0|^9.0|^10.0",
+    "phpunit/phpunit": "^10.0|^11.0",
+    "mockery/mockery": "^1.6"
+  },
+  "autoload": {
+    "psr-4": {
+      "ClaudeAgentSDK\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "ClaudeAgentSDK\\Tests\\": "tests/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "ClaudeAgentSDK\\ClaudeAgentServiceProvider"
+      ],
+      "aliases": {
+        "ClaudeAgent": "ClaudeAgentSDK\\Facades\\ClaudeAgent"
+      }
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

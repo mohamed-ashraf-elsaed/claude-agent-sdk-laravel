@@ -1,0 +1,46 @@
+<?php
+
+namespace ClaudeAgentSDK\Messages;
+
+class ResultMessage extends Message
+{
+    public function __construct(
+        public readonly string  $subtype,
+        public readonly ?string $result = null,
+        public readonly ?string $sessionId = null,
+        public readonly int     $durationMs = 0,
+        public readonly int     $durationApiMs = 0,
+        public readonly bool    $isError = false,
+        public readonly int     $numTurns = 0,
+        public readonly ?float  $totalCostUsd = null,
+        public readonly ?array  $usage = null,
+        public readonly ?array  $modelUsage = null,
+        public readonly ?array  $structuredOutput = null,
+        array                   $raw = [],
+    ) {
+        parent::__construct('result', $raw);
+    }
+
+    public static function parse(array $data): static
+    {
+        return new static(
+            subtype: $data['subtype'] ?? '',
+            result: $data['result'] ?? null,
+            sessionId: $data['session_id'] ?? null,
+            durationMs: $data['duration_ms'] ?? 0,
+            durationApiMs: $data['duration_api_ms'] ?? 0,
+            isError: $data['is_error'] ?? false,
+            numTurns: $data['num_turns'] ?? 0,
+            totalCostUsd: $data['total_cost_usd'] ?? null,
+            usage: $data['usage'] ?? null,
+            modelUsage: $data['model_usage'] ?? null,
+            structuredOutput: $data['structured_output'] ?? null,
+            raw: $data,
+        );
+    }
+
+    public function isSuccess(): bool
+    {
+        return $this->subtype === 'success';
+    }
+}
