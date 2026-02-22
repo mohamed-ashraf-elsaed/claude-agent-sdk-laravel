@@ -1,8 +1,8 @@
 # Claude Agent SDK for Laravel
 
 [![Tests](https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel/actions/workflows/tests.yml/badge.svg)](https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel/actions)
-[![Latest Version](https://img.shields.io/packagist/v/YOUR_VENDOR/claude-agent-sdk-laravel.svg)](https://packagist.org/packages/YOUR_VENDOR/claude-agent-sdk-laravel)
-[![License](https://img.shields.io/packagist/l/YOUR_VENDOR/claude-agent-sdk-laravel.svg)](LICENSE)
+[![Latest Version](https://img.shields.io/packagist/v/mohamed-ashraf-elsaed/claude-agent-sdk-laravel.svg)](https://packagist.org/packages/mohamed-ashraf-elsaed/claude-agent-sdk-laravel)
+[![License](https://img.shields.io/packagist/l/mohamed-ashraf-elsaed/claude-agent-sdk-laravel.svg)](LICENSE)
 
 Build AI agents with Claude Code as a library in your Laravel applications. This SDK wraps the Claude Code CLI to give your app access to file operations, bash commands, code editing, web search, subagents, and more.
 
