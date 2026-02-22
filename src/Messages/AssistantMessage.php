@@ -3,6 +3,8 @@
 namespace ClaudeAgentSDK\Messages;
 
 use ClaudeAgentSDK\Content\ContentBlock;
+use ClaudeAgentSDK\Content\TextBlock;
+use ClaudeAgentSDK\Content\ToolUseBlock;
 
 class AssistantMessage extends Message
 {
@@ -15,13 +17,14 @@ class AssistantMessage extends Message
     public readonly ?string $parentToolUseId;
 
     public function __construct(
-        array $content,
+        array   $content,
         ?string $id = null,
         ?string $model = null,
-        ?array $usage = null,
+        ?array  $usage = null,
         ?string $parentToolUseId = null,
-        array $raw = [],
-    ) {
+        array   $raw = [],
+    )
+    {
         parent::__construct('assistant', $raw);
         $this->content = $content;
         $this->id = $id;
@@ -52,7 +55,7 @@ class AssistantMessage extends Message
     {
         $parts = [];
         foreach ($this->content as $block) {
-            if ($block instanceof \ClaudeAgentSDK\Content\TextBlock) {
+            if ($block instanceof TextBlock) {
                 $parts[] = $block->text;
             }
         }
@@ -60,13 +63,15 @@ class AssistantMessage extends Message
     }
 
     /**
-     * @return \ClaudeAgentSDK\Content\ToolUseBlock[]
+     * @return ToolUseBlock[]
      */
     public function toolUses(): array
     {
-        return array_filter(
-            $this->content,
-            fn($b) => $b instanceof \ClaudeAgentSDK\Content\ToolUseBlock
+        return array_values(
+            array_filter(
+                $this->content,
+                fn($b) => $b instanceof ToolUseBlock
+            )
         );
     }
 }

@@ -11,7 +11,11 @@ abstract class Message
         $this->type = $type;
     }
 
-    public static function fromJson(array $data): static
+    /**
+     * @param array $data
+     * @return Message
+     */
+    public static function fromJson(array $data): Message
     {
         return match ($data['type'] ?? null) {
             'user' => UserMessage::parse($data),

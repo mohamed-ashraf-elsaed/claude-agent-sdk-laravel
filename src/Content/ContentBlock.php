@@ -6,7 +6,7 @@ abstract class ContentBlock
 {
     public function __construct(public readonly string $type) {}
 
-    public static function fromArray(array $data): static
+    public static function fromArray(array $data): ContentBlock
     {
         return match ($data['type'] ?? null) {
             'text' => new TextBlock($data['text'] ?? ''),
