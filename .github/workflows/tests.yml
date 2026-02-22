@@ -37,7 +37,7 @@ jobs:
           composer install --no-interaction --prefer-dist
 
       - name: Run tests
-        run: vendor/bin/phpunit --no-coverage
+        run: vendor/bin/phpunit
 
   code-style:
     runs-on: ubuntu-latest
@@ -48,4 +48,4 @@ jobs:
           php-version: '8.3'
           coverage: none
       - run: composer install --no-interaction
-      - run: vendor/bin/phpunit --no-coverage --testdox
+      - run: vendor/bin/phpunit --testdox
