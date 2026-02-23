@@ -50,3 +50,34 @@ $msg = new AssistantMessage(
     model: 'claude-sonnet-4-5-20250929',
 );
 ```
+
+## Testing Cache Metrics
+```php
+use ClaudeAgentSDK\Data\ModelUsage;
+use ClaudeAgentSDK\Messages\ResultMessage;
+use ClaudeAgentSDK\QueryResult;
+
+$result = new QueryResult([
+    ResultMessage::parse([
+        'type' => 'result',
+        'subtype' => 'success',
+        'result' => 'Done',
+        'model_usage' => [
+            'claude-sonnet-4-5-20250929' => [
+                'inputTokens' => 100,
+                'outputTokens' => 50,
+                'cacheReadInputTokens' => 5000,
+                'cacheCreationInputTokens' => 200,
+                'costUSD' => 0.003,
+            ],
+        ],
+    ]),
+]);
+
+$this->assertSame(5000, $result->cacheReadTokens());
+$this->assertSame(200, $result->cacheCreationTokens());
+
+$usage = $result->modelUsage()['claude-sonnet-4-5-20250929'];
+$this->assertInstanceOf(ModelUsage::class, $usage);
+$this->assertGreaterThan(0.9, $usage->cacheHitRate());
+```

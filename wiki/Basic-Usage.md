@@ -35,6 +35,7 @@ $options = ClaudeAgentOptions::make()
     ->tools(['Read', 'Grep', 'Glob'])
     ->permission('acceptEdits')
     ->maxTurns(5)
+    ->maxBudgetUsd(2.00)
     ->cwd(base_path());
 
 $result = ClaudeAgent::query('List all route files', $options);
@@ -47,6 +48,7 @@ Useful when options come from a request or config:
 $result = ClaudeAgent::query('Analyze this', [
     'allowed_tools' => ['Read'],
     'max_turns' => 3,
+    'max_budget_usd' => 1.00,
 ]);
 ```
 

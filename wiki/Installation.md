@@ -20,7 +20,7 @@ claude --version
 
 ## Install the Package
 ```bash
-composer require your-vendor/claude-agent-sdk-laravel
+composer require mohamed-ashraf-elsaed/claude-agent-sdk-laravel
 ```
 
 ## Publish Configuration
@@ -42,6 +42,8 @@ Optional environment variables:
 CLAUDE_AGENT_MODEL=claude-sonnet-4-5-20250929
 CLAUDE_AGENT_PERMISSION_MODE=acceptEdits
 CLAUDE_AGENT_MAX_TURNS=10
+CLAUDE_AGENT_MAX_BUDGET_USD=10.00
+CLAUDE_AGENT_MAX_THINKING_TOKENS=8000
 CLAUDE_AGENT_CWD=/var/www/project
 CLAUDE_AGENT_TIMEOUT=300
 CLAUDE_AGENT_CLI_PATH=/usr/local/bin/claude

@@ -9,6 +9,7 @@ Welcome to the Claude Agent SDK wiki. This SDK lets you build AI agents powered 
 - [[Basic Usage]]
 - [[Streaming]]
 - [[Options Reference]]
+- [[Hooks]]
 - [[Subagents]]
 - [[Structured Output]]
 - [[Session Management]]

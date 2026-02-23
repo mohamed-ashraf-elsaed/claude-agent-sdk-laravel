@@ -1,6 +1,5 @@
 <?php
 
-
 namespace ClaudeAgentSDK\Hooks;
 
 enum HookEvent: string

@@ -29,6 +29,12 @@ return [
     // Process timeout in seconds (null = no limit)
     'process_timeout' => env('CLAUDE_AGENT_TIMEOUT', null),
 
+    // Max budget in USD per query (null = no limit)
+    'max_budget_usd' => env('CLAUDE_AGENT_MAX_BUDGET_USD', null),
+
+    // Max thinking tokens (null = CLI default)
+    'max_thinking_tokens' => env('CLAUDE_AGENT_MAX_THINKING_TOKENS', null),
+
     // Third-party provider flags
     'providers' => [
         'bedrock' => env('CLAUDE_CODE_USE_BEDROCK', false),

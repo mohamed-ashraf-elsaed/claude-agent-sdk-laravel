@@ -40,6 +40,16 @@ $approachB = ClaudeAgent::query(
 );
 ```
 
+## Continue Last Conversation
+
+Resume the most recent conversation without needing a session ID:
+```php
+$result = ClaudeAgent::query(
+    'Continue where we left off',
+    ClaudeAgentOptions::make()->continueConversation(),
+);
+```
+
 ## Session ID Sources
 
 The session ID is extracted from messages in this priority:
