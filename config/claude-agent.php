@@ -88,6 +88,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Max Budget (USD)
+    |--------------------------------------------------------------------------
+    |
+    | Maximum budget in USD for a single query. Null = no limit.
+    |
+    */
+    'max_budget_usd' => env('CLAUDE_AGENT_MAX_BUDGET_USD', null),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Max Thinking Tokens
+    |--------------------------------------------------------------------------
+    |
+    | Maximum tokens for the extended thinking process. Null = default.
+    |
+    */
+    'max_thinking_tokens' => env('CLAUDE_AGENT_MAX_THINKING_TOKENS', null),
+
+    /*
+    |--------------------------------------------------------------------------
     | Third-Party Providers
     |--------------------------------------------------------------------------
     |

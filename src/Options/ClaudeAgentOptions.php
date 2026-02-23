@@ -3,6 +3,7 @@
 namespace ClaudeAgentSDK\Options;
 
 use ClaudeAgentSDK\Agents\AgentDefinition;
+use ClaudeAgentSDK\Hooks\HookEvent;
 use ClaudeAgentSDK\Hooks\HookMatcher;
 use ClaudeAgentSDK\Tools\McpServerConfig;
 
@@ -66,8 +67,14 @@ class ClaudeAgentOptions
 
     public bool $enableFileCheckpointing = false;
 
-    /** @var callable|null */
-    public $canUseTool = null;
+    public ?float $maxBudgetUsd = null;
+
+    public ?int $maxThinkingTokens = null;
+
+    public ?string $fallbackModel = null;
+
+    /** @var string[] */
+    public array $betas = [];
 
     public static function make(): static
     {
@@ -137,6 +144,12 @@ class ClaudeAgentOptions
         return $this;
     }
 
+    public function continueConversation(): static
+    {
+        $this->continueConversation = true;
+        return $this;
+    }
+
     public function maxTurns(int $turns): static
     {
         $this->maxTurns = $turns;
@@ -152,6 +165,18 @@ class ClaudeAgentOptions
     public function cwd(string $path): static
     {
         $this->cwd = $path;
+        return $this;
+    }
+
+    public function settings(string $path): static
+    {
+        $this->settings = $path;
+        return $this;
+    }
+
+    public function addDir(string $path): static
+    {
+        $this->addDirs[] = $path;
         return $this;
     }
 
@@ -194,6 +219,87 @@ class ClaudeAgentOptions
     public function env(string $key, string $value): static
     {
         $this->env[$key] = $value;
+        return $this;
+    }
+
+    public function user(string $userId): static
+    {
+        $this->user = $userId;
+        return $this;
+    }
+
+    public function extraArg(string $flag, ?string $value = null): static
+    {
+        $this->extraArgs[$flag] = $value;
+        return $this;
+    }
+
+    public function enableFileCheckpointing(bool $enable = true): static
+    {
+        $this->enableFileCheckpointing = $enable;
+        return $this;
+    }
+
+    public function includePartialMessages(bool $include = true): static
+    {
+        $this->includePartialMessages = $include;
+        return $this;
+    }
+
+    /**
+     * Add a hook for a specific event.
+     */
+    public function hook(HookEvent $event, HookMatcher $matcher): static
+    {
+        $this->hooks ??= [];
+        $this->hooks[$event->value] ??= [];
+        $this->hooks[$event->value][] = $matcher;
+        return $this;
+    }
+
+    /**
+     * Add a pre-tool-use hook.
+     */
+    public function preToolUse(string $command, ?string $matcher = null, ?int $timeout = null): static
+    {
+        return $this->hook(
+            HookEvent::PreToolUse,
+            HookMatcher::command($command, $matcher, $timeout),
+        );
+    }
+
+    /**
+     * Add a post-tool-use hook.
+     */
+    public function postToolUse(string $command, ?string $matcher = null, ?int $timeout = null): static
+    {
+        return $this->hook(
+            HookEvent::PostToolUse,
+            HookMatcher::command($command, $matcher, $timeout),
+        );
+    }
+
+    public function maxBudgetUsd(float $amount): static
+    {
+        $this->maxBudgetUsd = $amount;
+        return $this;
+    }
+
+    public function maxThinkingTokens(int $tokens): static
+    {
+        $this->maxThinkingTokens = $tokens;
+        return $this;
+    }
+
+    public function fallbackModel(string $model): static
+    {
+        $this->fallbackModel = $model;
+        return $this;
+    }
+
+    public function betas(array $betas): static
+    {
+        $this->betas = $betas;
         return $this;
     }
 
@@ -292,6 +398,18 @@ class ClaudeAgentOptions
             $args[] = json_encode($agentsPayload);
         }
 
+        if ($this->hooks) {
+            $hooksPayload = [];
+            foreach ($this->hooks as $event => $matchers) {
+                $hooksPayload[$event] = array_map(
+                    fn(HookMatcher $m) => $m->toArray(),
+                    $matchers,
+                );
+            }
+            $args[] = '--hooks';
+            $args[] = json_encode($hooksPayload);
+        }
+
         if (! empty($this->plugins)) {
             $args[] = '--plugins';
             $args[] = json_encode($this->plugins);
@@ -306,9 +424,35 @@ class ClaudeAgentOptions
             $args[] = '--enable-file-checkpointing';
         }
 
+        if ($this->includePartialMessages) {
+            $args[] = '--include-partial-messages';
+        }
+
         if ($this->user) {
             $args[] = '--user';
             $args[] = $this->user;
+        }
+
+        if ($this->maxBudgetUsd !== null) {
+            $args[] = '--max-budget-usd';
+            $args[] = (string) $this->maxBudgetUsd;
+        }
+
+        if ($this->maxThinkingTokens !== null) {
+            $args[] = '--max-thinking-tokens';
+            $args[] = (string) $this->maxThinkingTokens;
+        }
+
+        if ($this->fallbackModel) {
+            $args[] = '--fallback-model';
+            $args[] = $this->fallbackModel;
+        }
+
+        if (! empty($this->betas)) {
+            foreach ($this->betas as $beta) {
+                $args[] = '--beta';
+                $args[] = $beta;
+            }
         }
 
         foreach ($this->extraArgs as $key => $value) {
@@ -326,8 +470,6 @@ class ClaudeAgentOptions
      */
     public function toEnv(array $defaults = []): array
     {
-        $env = array_merge($defaults, $this->env);
-
-        return $env;
+        return array_merge($defaults, $this->env);
     }
 }

@@ -4,6 +4,7 @@ namespace ClaudeAgentSDK\Tests\Unit;
 
 use ClaudeAgentSDK\Content\TextBlock;
 use ClaudeAgentSDK\Content\ToolUseBlock;
+use ClaudeAgentSDK\Data\ModelUsage;
 use ClaudeAgentSDK\Messages\AssistantMessage;
 use ClaudeAgentSDK\Messages\GenericMessage;
 use ClaudeAgentSDK\Messages\ResultMessage;
@@ -18,20 +19,6 @@ class QueryResultTest extends TestCase
         $qr = new QueryResult([$this->makeResult()]);
 
         $this->assertSame('Final answer', $qr->text());
-    }
-
-    private function makeResult(array $overrides = []): ResultMessage
-    {
-        return ResultMessage::parse(array_merge([
-            'type' => 'result',
-            'subtype' => 'success',
-            'result' => 'Final answer',
-            'session_id' => 'sess_1',
-            'duration_ms' => 3000,
-            'num_turns' => 2,
-            'total_cost_usd' => 0.01,
-            'is_error' => false,
-        ], $overrides));
     }
 
     public function test_text_returns_null_without_result(): void
@@ -97,24 +84,6 @@ class QueryResultTest extends TestCase
         ]);
 
         $this->assertSame('sess_from_system', $qr->sessionId);
-    }
-
-    private function makeSystem(string $sessionId): SystemMessage
-    {
-        return SystemMessage::parse([
-            'type' => 'system',
-            'subtype' => 'init',
-            'session_id' => $sessionId,
-        ]);
-    }
-
-    private function makeAssistant(string $text, array $tools = []): AssistantMessage
-    {
-        $content = [new TextBlock($text)];
-        foreach ($tools as $t) {
-            $content[] = new ToolUseBlock($t['id'], $t['name'], $t['input'] ?? []);
-        }
-        return new AssistantMessage(content: $content);
     }
 
     public function test_session_id_from_result_when_no_system(): void
@@ -214,5 +183,96 @@ class QueryResultTest extends TestCase
         ]);
 
         $this->assertSame('Last result', $qr->text());
+    }
+
+    public function test_model_usage(): void
+    {
+        $qr = new QueryResult([
+            $this->makeResult([
+                'model_usage' => [
+                    'claude-sonnet-4-5-20250929' => [
+                        'inputTokens' => 100,
+                        'outputTokens' => 50,
+                        'cacheReadInputTokens' => 5000,
+                        'cacheCreationInputTokens' => 200,
+                        'costUSD' => 0.003,
+                    ],
+                ],
+            ]),
+        ]);
+
+        $usage = $qr->modelUsage();
+        $this->assertCount(1, $usage);
+        $this->assertInstanceOf(ModelUsage::class, $usage['claude-sonnet-4-5-20250929']);
+    }
+
+    public function test_cache_read_tokens(): void
+    {
+        $qr = new QueryResult([
+            $this->makeResult([
+                'model_usage' => [
+                    'sonnet' => ['cacheReadInputTokens' => 3000],
+                    'haiku' => ['cacheReadInputTokens' => 2000],
+                ],
+            ]),
+        ]);
+
+        $this->assertSame(5000, $qr->cacheReadTokens());
+    }
+
+    public function test_cache_creation_tokens(): void
+    {
+        $qr = new QueryResult([
+            $this->makeResult([
+                'model_usage' => [
+                    'sonnet' => ['cacheCreationInputTokens' => 1000],
+                ],
+            ]),
+        ]);
+
+        $this->assertSame(1000, $qr->cacheCreationTokens());
+    }
+
+    public function test_cache_tokens_without_result(): void
+    {
+        $qr = new QueryResult([]);
+
+        $this->assertSame(0, $qr->cacheReadTokens());
+        $this->assertSame(0, $qr->cacheCreationTokens());
+        $this->assertSame([], $qr->modelUsage());
+    }
+
+    // --- Helpers ---
+
+    private function makeResult(array $overrides = []): ResultMessage
+    {
+        return ResultMessage::parse(array_merge([
+            'type' => 'result',
+            'subtype' => 'success',
+            'result' => 'Final answer',
+            'session_id' => 'sess_1',
+            'duration_ms' => 3000,
+            'num_turns' => 2,
+            'total_cost_usd' => 0.01,
+            'is_error' => false,
+        ], $overrides));
+    }
+
+    private function makeSystem(string $sessionId): SystemMessage
+    {
+        return SystemMessage::parse([
+            'type' => 'system',
+            'subtype' => 'init',
+            'session_id' => $sessionId,
+        ]);
+    }
+
+    private function makeAssistant(string $text, array $tools = []): AssistantMessage
+    {
+        $content = [new TextBlock($text)];
+        foreach ($tools as $t) {
+            $content[] = new ToolUseBlock($t['id'], $t['name'], $t['input'] ?? []);
+        }
+        return new AssistantMessage(content: $content);
     }
 }

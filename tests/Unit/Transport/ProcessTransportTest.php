@@ -15,7 +15,6 @@ class ProcessTransportTest extends TestCase
             'process_timeout' => 120,
         ]);
 
-        // Just verify no exceptions on construction
         $this->assertInstanceOf(ProcessTransport::class, $transport);
     }
 
@@ -40,5 +39,12 @@ class ProcessTransportTest extends TestCase
         $transport->stop();
 
         $this->assertTrue(true);
+    }
+
+    public function test_constructor_with_empty_config(): void
+    {
+        $transport = new ProcessTransport([]);
+
+        $this->assertInstanceOf(ProcessTransport::class, $transport);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace ClaudeAgentSDK;
 
+use ClaudeAgentSDK\Data\ModelUsage;
 use ClaudeAgentSDK\Messages\AssistantMessage;
 use ClaudeAgentSDK\Messages\Message;
 use ClaudeAgentSDK\Messages\ResultMessage;
@@ -135,5 +136,31 @@ class QueryResult
             $uses = array_merge($uses, $msg->toolUses());
         }
         return $uses;
+    }
+
+    /**
+     * Get per-model usage breakdown.
+     *
+     * @return array<string, ModelUsage>
+     */
+    public function modelUsage(): array
+    {
+        return $this->result?->parsedModelUsage() ?? [];
+    }
+
+    /**
+     * Total cache-read tokens across all models.
+     */
+    public function cacheReadTokens(): int
+    {
+        return $this->result?->cacheReadTokens() ?? 0;
+    }
+
+    /**
+     * Total cache-creation tokens across all models.
+     */
+    public function cacheCreationTokens(): int
+    {
+        return $this->result?->cacheCreationTokens() ?? 0;
     }
 }

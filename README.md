@@ -49,6 +49,7 @@ $options = ClaudeAgentOptions::make()
     ->tools(['Read', 'Edit', 'Bash', 'Grep', 'Glob'])
     ->permission('acceptEdits')
     ->maxTurns(10)
+    ->maxBudgetUsd(5.00)
     ->cwd('/path/to/project');
 
 $result = ClaudeAgent::query('Find and fix the bug in auth.php', $options);
@@ -99,10 +100,14 @@ $options = ClaudeAgentOptions::make()
     ->model('claude-sonnet-4-5-20250929')
     ->permission('acceptEdits')
     ->maxTurns(15)
+    ->maxBudgetUsd(10.00)
+    ->maxThinkingTokens(8000)
+    ->fallbackModel('claude-haiku-4-5')
     ->cwd('/path/to/project')
     ->env('MY_VAR', 'value')
     ->settingSources(['project'])
-    ->useClaudeCodePrompt('Also follow PSR-12.');
+    ->useClaudeCodePrompt('Also follow PSR-12.')
+    ->betas(['context-1m-2025-08-07']);
 ```
 
 ### From Array
@@ -111,6 +116,8 @@ $options = ClaudeAgentOptions::fromArray([
     'allowed_tools' => ['Read', 'Bash'],
     'permission_mode' => 'bypassPermissions',
     'max_turns' => 5,
+    'max_budget_usd' => 5.00,
+    'max_thinking_tokens' => 10000,
 ]);
 ```
 
@@ -134,6 +141,40 @@ $options->useClaudeCodePrompt('Follow PSR-12 and use strict types.');
 | `acceptEdits`      | Auto-accept file edits, ask for others      |
 | `dontAsk`          | Don't ask but log decisions                 |
 | `bypassPermissions`| Skip all permission checks                  |
+
+## Hooks
+
+Run shell commands before or after Claude uses tools:
+```php
+use ClaudeAgentSDK\Hooks\HookEvent;
+use ClaudeAgentSDK\Hooks\HookMatcher;
+
+$options = ClaudeAgentOptions::make()
+    ->tools(['Read', 'Edit', 'Bash'])
+    // Shorthand methods
+    ->preToolUse('php artisan lint:check', '/Edit|Write/', 30)
+    ->postToolUse('php artisan test:affected')
+    // Or use hook() directly for any event
+    ->hook(HookEvent::Stop, HookMatcher::command('php /hooks/cleanup.php'));
+
+$result = ClaudeAgent::query('Refactor the User model', $options);
+```
+
+### HookMatcher Factory Methods
+```php
+// From a shell command
+$matcher = HookMatcher::command('eslint --fix', '/Edit|Write/', 60);
+
+// From a PHP script
+$matcher = HookMatcher::phpScript('/hooks/validate.php', '/Bash/', 10);
+
+// Full control
+$matcher = new HookMatcher(
+    matcher: '/Edit|Write/',
+    hooks: ['php /hooks/lint.php', 'php /hooks/backup.php'],
+    timeout: 30,
+);
+```
 
 ## Subagents
 
@@ -254,6 +295,17 @@ $result->assistantMessages(); // AssistantMessage[] only
 $result->fullText();          // Concatenated text from all assistant messages
 $result->toolUses();          // All ToolUseBlock objects across messages
 $result->structured();        // Structured output array (if outputFormat set)
+
+// Per-model usage & cache metrics
+$result->modelUsage();        // array<string, ModelUsage> — per-model breakdown
+$result->cacheReadTokens();   // int — total cache-read tokens across all models
+$result->cacheCreationTokens(); // int — total cache-creation tokens
+
+foreach ($result->modelUsage() as $model => $usage) {
+    echo "{$model}: {$usage->inputTokens} in, {$usage->outputTokens} out\n";
+    echo "  Cache hit rate: " . round($usage->cacheHitRate() * 100) . "%\n";
+    echo "  Cost: \${$usage->costUsd}\n";
+}
 ```
 
 ## Working with Messages
@@ -261,7 +313,6 @@ $result->structured();        // Structured output array (if outputFormat set)
 use ClaudeAgentSDK\Messages\AssistantMessage;
 use ClaudeAgentSDK\Messages\SystemMessage;
 use ClaudeAgentSDK\Messages\ResultMessage;
-use ClaudeAgentSDK\Messages\UserMessage;
 
 foreach (ClaudeAgent::stream('Do something') as $message) {
     match (true) {
@@ -296,6 +347,8 @@ Set defaults in `config/claude-agent.php` or `.env`:
 CLAUDE_AGENT_MODEL=claude-sonnet-4-5-20250929
 CLAUDE_AGENT_PERMISSION_MODE=acceptEdits
 CLAUDE_AGENT_MAX_TURNS=10
+CLAUDE_AGENT_MAX_BUDGET_USD=10.00
+CLAUDE_AGENT_MAX_THINKING_TOKENS=8000
 CLAUDE_AGENT_CWD=/var/www/project
 CLAUDE_AGENT_TIMEOUT=300
 CLAUDE_AGENT_CLI_PATH=/usr/local/bin/claude
@@ -303,7 +356,7 @@ CLAUDE_AGENT_CLI_PATH=/usr/local/bin/claude
 
 Options passed to `query()` override config defaults.
 
-## Advanced: Sandbox & Plugins
+## Advanced: Sandbox, Plugins & Betas
 ```php
 // Run in a sandboxed environment
 $options = ClaudeAgentOptions::make()
@@ -312,12 +365,22 @@ $options = ClaudeAgentOptions::make()
 // Load a local plugin
 $options = ClaudeAgentOptions::make()
     ->plugin('/path/to/my-plugin');
+
+// Enable beta features
+$options = ClaudeAgentOptions::make()
+    ->betas(['context-1m-2025-08-07']);
+
+// Set a fallback model
+$options = ClaudeAgentOptions::make()
+    ->model('claude-sonnet-4-5-20250929')
+    ->fallbackModel('claude-haiku-4-5');
 ```
 
 ## Error Handling
 ```php
 use ClaudeAgentSDK\Exceptions\CliNotFoundException;
 use ClaudeAgentSDK\Exceptions\ProcessException;
+use ClaudeAgentSDK\Exceptions\JsonParseException;
 use ClaudeAgentSDK\Exceptions\ClaudeAgentException;
 
 try {
@@ -328,6 +391,9 @@ try {
 } catch (ProcessException $e) {
     echo $e->exitCode;   // Process exit code
     echo $e->stderr;     // Standard error output
+} catch (JsonParseException $e) {
+    echo $e->rawLine;    // The malformed JSON line
+    echo $e->originalError; // The underlying JsonException
 } catch (ClaudeAgentException $e) {
     // General SDK error
 }

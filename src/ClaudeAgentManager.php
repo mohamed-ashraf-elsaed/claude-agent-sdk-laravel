@@ -2,10 +2,10 @@
 
 namespace ClaudeAgentSDK;
 
-use ClaudeAgentSDK\Agents\AgentDefinition;
 use ClaudeAgentSDK\Messages\Message;
 use ClaudeAgentSDK\Options\ClaudeAgentOptions;
 use ClaudeAgentSDK\Transport\ProcessTransport;
+use Generator;
 
 class ClaudeAgentManager
 {
@@ -43,73 +43,6 @@ class ClaudeAgentManager
         return new QueryResult($messages);
     }
 
-    /**
-     * Run a query and yield messages as they stream in.
-     *
-     * @return \Generator<Message>
-     */
-    public function stream(string $prompt, ClaudeAgentOptions|array|null $options = null): \Generator
-    {
-        $opts = $this->resolveOptions($options);
-        yield from $this->transport->stream($prompt, $opts);
-    }
-
-    /**
-     * Run a query and collect streamed messages into a QueryResult.
-     * Allows you to process messages during streaming via a callback.
-     */
-    public function streamCollect(
-        string $prompt,
-        ?callable $onMessage = null,
-        ClaudeAgentOptions|array|null $options = null,
-    ): QueryResult {
-        $messages = [];
-
-        foreach ($this->stream($prompt, $options) as $message) {
-            $messages[] = $message;
-
-            if ($onMessage) {
-                $onMessage($message);
-            }
-        }
-
-        return new QueryResult($messages);
-    }
-
-    /**
-     * Stop any running process.
-     */
-    public function stop(): void
-    {
-        $this->transport->stop();
-    }
-
-    /**
-     * Create a new options builder pre-filled with config defaults.
-     */
-    public function options(): ClaudeAgentOptions
-    {
-        $o = ClaudeAgentOptions::make();
-
-        if ($this->config['model'] ?? null) {
-            $o->model($this->config['model']);
-        }
-        if ($this->config['permission_mode'] ?? null) {
-            $o->permission($this->config['permission_mode']);
-        }
-        if ($this->config['cwd'] ?? null) {
-            $o->cwd($this->config['cwd']);
-        }
-        if (! empty($this->config['allowed_tools'])) {
-            $o->tools($this->config['allowed_tools']);
-        }
-        if ($this->config['max_turns'] ?? null) {
-            $o->maxTurns($this->config['max_turns']);
-        }
-
-        return $o;
-    }
-
     private function resolveOptions(ClaudeAgentOptions|array|null $options): ClaudeAgentOptions
     {
         if ($options instanceof ClaudeAgentOptions) {
@@ -129,21 +62,26 @@ class ClaudeAgentManager
 
     private function mergeWithDefaults(ClaudeAgentOptions $opts): ClaudeAgentOptions
     {
-        // Apply config defaults to empty fields
-        if (! $opts->model && ($this->config['model'] ?? null)) {
+        if (!$opts->model && ($this->config['model'] ?? null)) {
             $opts->model = $this->config['model'];
         }
-        if (! $opts->permissionMode && ($this->config['permission_mode'] ?? null)) {
+        if (!$opts->permissionMode && ($this->config['permission_mode'] ?? null)) {
             $opts->permissionMode = $this->config['permission_mode'];
         }
-        if (! $opts->cwd) {
+        if (!$opts->cwd) {
             $opts->cwd = $this->config['cwd'] ?? base_path();
         }
-        if (empty($opts->allowedTools) && ! empty($this->config['allowed_tools'])) {
+        if (empty($opts->allowedTools) && !empty($this->config['allowed_tools'])) {
             $opts->allowedTools = $this->config['allowed_tools'];
         }
-        if (! $opts->maxTurns && ($this->config['max_turns'] ?? null)) {
+        if (!$opts->maxTurns && ($this->config['max_turns'] ?? null)) {
             $opts->maxTurns = $this->config['max_turns'];
+        }
+        if ($opts->maxBudgetUsd === null && ($this->config['max_budget_usd'] ?? null)) {
+            $opts->maxBudgetUsd = $this->config['max_budget_usd'];
+        }
+        if ($opts->maxThinkingTokens === null && ($this->config['max_thinking_tokens'] ?? null)) {
+            $opts->maxThinkingTokens = $this->config['max_thinking_tokens'];
         }
 
         return $opts;
@@ -152,5 +90,79 @@ class ClaudeAgentManager
     private function buildConfigOptions(): ClaudeAgentOptions
     {
         return $this->options();
+    }
+
+    /**
+     * Create a new options builder pre-filled with config defaults.
+     */
+    public function options(): ClaudeAgentOptions
+    {
+        $o = ClaudeAgentOptions::make();
+
+        if ($this->config['model'] ?? null) {
+            $o->model($this->config['model']);
+        }
+        if ($this->config['permission_mode'] ?? null) {
+            $o->permission($this->config['permission_mode']);
+        }
+        if ($this->config['cwd'] ?? null) {
+            $o->cwd($this->config['cwd']);
+        }
+        if (!empty($this->config['allowed_tools'])) {
+            $o->tools($this->config['allowed_tools']);
+        }
+        if ($this->config['max_turns'] ?? null) {
+            $o->maxTurns($this->config['max_turns']);
+        }
+        if ($this->config['max_budget_usd'] ?? null) {
+            $o->maxBudgetUsd($this->config['max_budget_usd']);
+        }
+        if ($this->config['max_thinking_tokens'] ?? null) {
+            $o->maxThinkingTokens($this->config['max_thinking_tokens']);
+        }
+
+        return $o;
+    }
+
+    /**
+     * Run a query and collect streamed messages into a QueryResult.
+     * Allows you to process messages during streaming via a callback.
+     */
+    public function streamCollect(
+        string                        $prompt,
+        ?callable                     $onMessage = null,
+        ClaudeAgentOptions|array|null $options = null,
+    ): QueryResult
+    {
+        $messages = [];
+
+        foreach ($this->stream($prompt, $options) as $message) {
+            $messages[] = $message;
+
+            if ($onMessage) {
+                $onMessage($message);
+            }
+        }
+
+        return new QueryResult($messages);
+    }
+
+    /**
+     * Run a query and yield messages as they stream in.
+     *
+     * @return Generator<Message>
+     */
+    public function stream(string $prompt, ClaudeAgentOptions|array|null $options = null): Generator
+    {
+        $opts = $this->resolveOptions($options);
+        yield from $this->transport->stream($prompt, $opts);
+    }
+
+    /**
+     * Stop any running process.
+     */
+    public function stop(): void
+    {
+        $this->transport->stop();
     }
 }

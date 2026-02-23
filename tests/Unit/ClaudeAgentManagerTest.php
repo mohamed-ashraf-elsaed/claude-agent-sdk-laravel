@@ -51,4 +51,26 @@ class ClaudeAgentManagerTest extends TestCase
 
         $this->assertNotSame($manager, $clone);
     }
+
+    public function test_options_applies_new_config_defaults(): void
+    {
+        $manager = new ClaudeAgentManager([
+            'max_budget_usd' => 5.0,
+            'max_thinking_tokens' => 8000,
+        ]);
+
+        $opts = $manager->options();
+
+        $this->assertSame(5.0, $opts->maxBudgetUsd);
+        $this->assertSame(8000, $opts->maxThinkingTokens);
+    }
+
+    public function test_options_new_defaults_null_when_not_configured(): void
+    {
+        $manager = new ClaudeAgentManager([]);
+        $opts = $manager->options();
+
+        $this->assertNull($opts->maxBudgetUsd);
+        $this->assertNull($opts->maxThinkingTokens);
+    }
 }

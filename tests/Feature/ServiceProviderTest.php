@@ -46,4 +46,12 @@ class ServiceProviderTest extends TestCase
     {
         $this->assertSame('default', $this->app['config']['claude-agent.permission_mode']);
     }
+
+    public function test_new_config_keys_are_merged(): void
+    {
+        $config = $this->app['config']['claude-agent'];
+
+        $this->assertArrayHasKey('max_budget_usd', $config);
+        $this->assertArrayHasKey('max_thinking_tokens', $config);
+    }
 }

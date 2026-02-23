@@ -3,12 +3,16 @@
 namespace ClaudeAgentSDK\Tests\Unit\Options;
 
 use ClaudeAgentSDK\Agents\AgentDefinition;
+use ClaudeAgentSDK\Hooks\HookEvent;
+use ClaudeAgentSDK\Hooks\HookMatcher;
 use ClaudeAgentSDK\Options\ClaudeAgentOptions;
 use ClaudeAgentSDK\Tools\McpServerConfig;
 use PHPUnit\Framework\TestCase;
 
 class ClaudeAgentOptionsTest extends TestCase
 {
+    // --- Core fluent setters ---
+
     public function test_make_creates_instance(): void
     {
         $opts = ClaudeAgentOptions::make();
@@ -74,6 +78,13 @@ class ClaudeAgentOptionsTest extends TestCase
 
         $this->assertSame('sess_123', $opts->resume);
         $this->assertTrue($opts->forkSession);
+    }
+
+    public function test_fluent_continue_conversation(): void
+    {
+        $opts = ClaudeAgentOptions::make()->continueConversation();
+
+        $this->assertTrue($opts->continueConversation);
     }
 
     public function test_fluent_system_prompt_string(): void
@@ -172,6 +183,157 @@ class ClaudeAgentOptionsTest extends TestCase
         $this->assertSame([['type' => 'local', 'path' => '/path/to/plugin']], $opts->plugins);
     }
 
+    public function test_fluent_settings(): void
+    {
+        $opts = ClaudeAgentOptions::make()->settings('/path/settings.json');
+
+        $this->assertSame('/path/settings.json', $opts->settings);
+    }
+
+    public function test_fluent_add_dir(): void
+    {
+        $opts = ClaudeAgentOptions::make()
+            ->addDir('/extra/dir1')
+            ->addDir('/extra/dir2');
+
+        $this->assertSame(['/extra/dir1', '/extra/dir2'], $opts->addDirs);
+    }
+
+    public function test_fluent_user(): void
+    {
+        $opts = ClaudeAgentOptions::make()->user('user_123');
+
+        $this->assertSame('user_123', $opts->user);
+    }
+
+    public function test_fluent_extra_arg(): void
+    {
+        $opts = ClaudeAgentOptions::make()
+            ->extraArg('verbose')
+            ->extraArg('level', '3');
+
+        $this->assertSame(['verbose' => null, 'level' => '3'], $opts->extraArgs);
+    }
+
+    public function test_fluent_enable_file_checkpointing(): void
+    {
+        $opts = ClaudeAgentOptions::make()->enableFileCheckpointing();
+
+        $this->assertTrue($opts->enableFileCheckpointing);
+    }
+
+    public function test_fluent_enable_file_checkpointing_false(): void
+    {
+        $opts = ClaudeAgentOptions::make()->enableFileCheckpointing(false);
+
+        $this->assertFalse($opts->enableFileCheckpointing);
+    }
+
+    public function test_fluent_include_partial_messages(): void
+    {
+        $opts = ClaudeAgentOptions::make()->includePartialMessages();
+
+        $this->assertTrue($opts->includePartialMessages);
+    }
+
+    public function test_fluent_include_partial_messages_false(): void
+    {
+        $opts = ClaudeAgentOptions::make()->includePartialMessages(false);
+
+        $this->assertFalse($opts->includePartialMessages);
+    }
+
+    public function test_fluent_max_budget_usd(): void
+    {
+        $opts = ClaudeAgentOptions::make()->maxBudgetUsd(5.50);
+
+        $this->assertSame(5.50, $opts->maxBudgetUsd);
+    }
+
+    public function test_fluent_max_thinking_tokens(): void
+    {
+        $opts = ClaudeAgentOptions::make()->maxThinkingTokens(10000);
+
+        $this->assertSame(10000, $opts->maxThinkingTokens);
+    }
+
+    public function test_fluent_fallback_model(): void
+    {
+        $opts = ClaudeAgentOptions::make()->fallbackModel('claude-haiku-4-5');
+
+        $this->assertSame('claude-haiku-4-5', $opts->fallbackModel);
+    }
+
+    public function test_fluent_betas(): void
+    {
+        $opts = ClaudeAgentOptions::make()->betas(['context-1m-2025-08-07']);
+
+        $this->assertSame(['context-1m-2025-08-07'], $opts->betas);
+    }
+
+    // --- Hooks ---
+
+    public function test_fluent_hook(): void
+    {
+        $matcher = HookMatcher::command('php lint.php', '/Edit|Write/');
+        $opts = ClaudeAgentOptions::make()->hook(HookEvent::PreToolUse, $matcher);
+
+        $this->assertNotNull($opts->hooks);
+        $this->assertArrayHasKey('PreToolUse', $opts->hooks);
+        $this->assertCount(1, $opts->hooks['PreToolUse']);
+        $this->assertSame($matcher, $opts->hooks['PreToolUse'][0]);
+    }
+
+    public function test_fluent_hook_multiple_matchers_same_event(): void
+    {
+        $opts = ClaudeAgentOptions::make()
+            ->hook(HookEvent::PreToolUse, HookMatcher::command('php lint.php', '/Edit/'))
+            ->hook(HookEvent::PreToolUse, HookMatcher::command('php audit.php', '/Bash/'));
+
+        $this->assertCount(2, $opts->hooks['PreToolUse']);
+    }
+
+    public function test_fluent_hook_multiple_events(): void
+    {
+        $opts = ClaudeAgentOptions::make()
+            ->hook(HookEvent::PreToolUse, HookMatcher::command('php before.php'))
+            ->hook(HookEvent::PostToolUse, HookMatcher::command('php after.php'))
+            ->hook(HookEvent::Stop, HookMatcher::command('php cleanup.php'));
+
+        $this->assertCount(3, $opts->hooks);
+        $this->assertArrayHasKey('PreToolUse', $opts->hooks);
+        $this->assertArrayHasKey('PostToolUse', $opts->hooks);
+        $this->assertArrayHasKey('Stop', $opts->hooks);
+    }
+
+    public function test_fluent_pre_tool_use_shorthand(): void
+    {
+        $opts = ClaudeAgentOptions::make()
+            ->preToolUse('php lint.php', '/Edit|Write/', 30);
+
+        $this->assertCount(1, $opts->hooks['PreToolUse']);
+        $matcher = $opts->hooks['PreToolUse'][0];
+        $this->assertSame('/Edit|Write/', $matcher->matcher);
+        $this->assertSame(['php lint.php'], $matcher->hooks);
+        $this->assertSame(30, $matcher->timeout);
+    }
+
+    public function test_fluent_post_tool_use_shorthand(): void
+    {
+        $opts = ClaudeAgentOptions::make()
+            ->postToolUse('php notify.php', '/Bash/');
+
+        $this->assertCount(1, $opts->hooks['PostToolUse']);
+        $this->assertSame('/Bash/', $opts->hooks['PostToolUse'][0]->matcher);
+    }
+
+    public function test_hooks_null_by_default(): void
+    {
+        $opts = ClaudeAgentOptions::make();
+
+        $this->assertNull($opts->hooks);
+    }
+
     // --- fromArray ---
 
     public function test_from_array_snake_case(): void
@@ -197,6 +359,23 @@ class ClaudeAgentOptionsTest extends TestCase
         ]);
 
         $this->assertSame('test', $opts->model);
+    }
+
+    public function test_from_array_new_options(): void
+    {
+        $opts = ClaudeAgentOptions::fromArray([
+            'max_budget_usd' => 10.0,
+            'max_thinking_tokens' => 5000,
+            'fallback_model' => 'claude-haiku-4-5',
+            'betas' => ['context-1m-2025-08-07'],
+            'include_partial_messages' => true,
+        ]);
+
+        $this->assertSame(10.0, $opts->maxBudgetUsd);
+        $this->assertSame(5000, $opts->maxThinkingTokens);
+        $this->assertSame('claude-haiku-4-5', $opts->fallbackModel);
+        $this->assertSame(['context-1m-2025-08-07'], $opts->betas);
+        $this->assertTrue($opts->includePartialMessages);
     }
 
     // --- toCliArgs ---
@@ -266,8 +445,7 @@ class ClaudeAgentOptionsTest extends TestCase
 
     public function test_cli_args_continue(): void
     {
-        $opts = ClaudeAgentOptions::make();
-        $opts->continueConversation = true;
+        $opts = ClaudeAgentOptions::make()->continueConversation();
         $args = $opts->toCliArgs();
 
         $this->assertContains('--continue', $args);
@@ -298,6 +476,49 @@ class ClaudeAgentOptionsTest extends TestCase
         $this->assertSame('Reviews', $decoded['reviewer']['description']);
     }
 
+    public function test_cli_args_hooks(): void
+    {
+        $opts = ClaudeAgentOptions::make()
+            ->hook(HookEvent::PreToolUse, new HookMatcher('/Edit|Write/', ['php lint.php'], 30))
+            ->hook(HookEvent::PostToolUse, HookMatcher::command('php notify.php'));
+
+        $args = $opts->toCliArgs();
+
+        $this->assertContains('--hooks', $args);
+        $idx = array_search('--hooks', $args);
+        $decoded = json_decode($args[$idx + 1], true);
+
+        $this->assertArrayHasKey('PreToolUse', $decoded);
+        $this->assertArrayHasKey('PostToolUse', $decoded);
+        $this->assertCount(1, $decoded['PreToolUse']);
+        $this->assertSame('/Edit|Write/', $decoded['PreToolUse'][0]['matcher']);
+        $this->assertSame(['php lint.php'], $decoded['PreToolUse'][0]['hooks']);
+        $this->assertSame(30, $decoded['PreToolUse'][0]['timeout']);
+    }
+
+    public function test_cli_args_hooks_multiple_matchers(): void
+    {
+        $opts = ClaudeAgentOptions::make()
+            ->preToolUse('php check-edits.php', '/Edit/')
+            ->preToolUse('php check-bash.php', '/Bash/', 10);
+
+        $args = $opts->toCliArgs();
+        $idx = array_search('--hooks', $args);
+        $decoded = json_decode($args[$idx + 1], true);
+
+        $this->assertCount(2, $decoded['PreToolUse']);
+        $this->assertSame('/Edit/', $decoded['PreToolUse'][0]['matcher']);
+        $this->assertSame('/Bash/', $decoded['PreToolUse'][1]['matcher']);
+        $this->assertSame(10, $decoded['PreToolUse'][1]['timeout']);
+    }
+
+    public function test_cli_args_hooks_not_present_when_null(): void
+    {
+        $args = ClaudeAgentOptions::make()->toCliArgs();
+
+        $this->assertNotContains('--hooks', $args);
+    }
+
     public function test_cli_args_mcp_servers(): void
     {
         $opts = ClaudeAgentOptions::make()
@@ -309,32 +530,116 @@ class ClaudeAgentOptionsTest extends TestCase
 
     public function test_cli_args_enable_file_checkpointing(): void
     {
-        $opts = ClaudeAgentOptions::make();
-        $opts->enableFileCheckpointing = true;
+        $opts = ClaudeAgentOptions::make()->enableFileCheckpointing();
         $args = $opts->toCliArgs();
 
         $this->assertContains('--enable-file-checkpointing', $args);
     }
 
+    public function test_cli_args_include_partial_messages(): void
+    {
+        $opts = ClaudeAgentOptions::make()->includePartialMessages();
+        $args = $opts->toCliArgs();
+
+        $this->assertContains('--include-partial-messages', $args);
+    }
+
     public function test_cli_args_user(): void
     {
-        $opts = ClaudeAgentOptions::make();
-        $opts->user = 'user_123';
+        $opts = ClaudeAgentOptions::make()->user('user_123');
         $args = $opts->toCliArgs();
 
         $this->assertContains('--user', $args);
         $this->assertContains('user_123', $args);
     }
 
+    public function test_cli_args_settings(): void
+    {
+        $opts = ClaudeAgentOptions::make()->settings('/path/settings.json');
+        $args = $opts->toCliArgs();
+
+        $this->assertContains('--settings', $args);
+        $idx = array_search('--settings', $args);
+        $this->assertSame('/path/settings.json', $args[$idx + 1]);
+    }
+
+    public function test_cli_args_add_dirs(): void
+    {
+        $opts = ClaudeAgentOptions::make()
+            ->addDir('/extra/a')
+            ->addDir('/extra/b');
+        $args = $opts->toCliArgs();
+
+        $indices = array_keys(array_filter($args, fn($v) => $v === '--add-dir'));
+        $this->assertCount(2, $indices);
+    }
+
     public function test_cli_args_extra_args(): void
     {
-        $opts = ClaudeAgentOptions::make();
-        $opts->extraArgs = ['verbose' => null, 'level' => '3'];
+        $opts = ClaudeAgentOptions::make()
+            ->extraArg('verbose')
+            ->extraArg('level', '3');
         $args = $opts->toCliArgs();
 
         $this->assertContains('--verbose', $args);
         $this->assertContains('--level', $args);
         $this->assertContains('3', $args);
+    }
+
+    public function test_cli_args_max_budget_usd(): void
+    {
+        $opts = ClaudeAgentOptions::make()->maxBudgetUsd(2.5);
+        $args = $opts->toCliArgs();
+
+        $this->assertContains('--max-budget-usd', $args);
+        $idx = array_search('--max-budget-usd', $args);
+        $this->assertSame('2.5', $args[$idx + 1]);
+    }
+
+    public function test_cli_args_max_thinking_tokens(): void
+    {
+        $opts = ClaudeAgentOptions::make()->maxThinkingTokens(8000);
+        $args = $opts->toCliArgs();
+
+        $this->assertContains('--max-thinking-tokens', $args);
+        $this->assertContains('8000', $args);
+    }
+
+    public function test_cli_args_fallback_model(): void
+    {
+        $opts = ClaudeAgentOptions::make()->fallbackModel('claude-haiku-4-5');
+        $args = $opts->toCliArgs();
+
+        $this->assertContains('--fallback-model', $args);
+        $this->assertContains('claude-haiku-4-5', $args);
+    }
+
+    public function test_cli_args_betas(): void
+    {
+        $opts = ClaudeAgentOptions::make()->betas(['context-1m-2025-08-07']);
+        $args = $opts->toCliArgs();
+
+        $this->assertContains('--beta', $args);
+        $this->assertContains('context-1m-2025-08-07', $args);
+    }
+
+    public function test_cli_args_absent_when_not_set(): void
+    {
+        $args = ClaudeAgentOptions::make()->toCliArgs();
+
+        $absent = [
+            '--max-budget-usd', '--max-thinking-tokens', '--fallback-model',
+            '--beta', '--settings', '--add-dir', '--user',
+            '--enable-file-checkpointing', '--continue', '--hooks',
+            '--include-partial-messages', '--model', '--permission-mode',
+            '--max-turns', '--resume', '--fork-session', '--system-prompt',
+            '--allowed-tools', '--disallowed-tools', '--mcp-servers',
+            '--agents', '--plugins', '--sandbox',
+        ];
+
+        foreach ($absent as $flag) {
+            $this->assertNotContains($flag, $args, "Flag {$flag} should not be present");
+        }
     }
 
     // --- toEnv ---
