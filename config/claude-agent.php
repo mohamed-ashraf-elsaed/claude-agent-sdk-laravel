@@ -108,6 +108,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Custom API Base URL
+    |--------------------------------------------------------------------------
+    |
+    | Override the default Anthropic API base URL. Useful for self-hosted or
+    | Anthropic-compatible API providers. This is passed as the
+    | ANTHROPIC_BASE_URL environment variable to the CLI process.
+    |
+    */
+    'api_base_url' => env('ANTHROPIC_BASE_URL', null),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Auth Token
+    |--------------------------------------------------------------------------
+    |
+    | Override the default auth token header. Some custom API providers
+    | require a different authentication token format. This is passed as
+    | the ANTHROPIC_AUTH_TOKEN environment variable to the CLI process.
+    |
+    */
+    'auth_token' => env('ANTHROPIC_AUTH_TOKEN', null),
+
+    /*
+    |--------------------------------------------------------------------------
     | Third-Party Providers
     |--------------------------------------------------------------------------
     |

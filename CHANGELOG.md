@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-02-26
+
+### Added
+- **Custom API provider support** — first-class config for Anthropic-compatible API providers
+    - `api_base_url` config key (`ANTHROPIC_BASE_URL` env var) — override the default Anthropic API endpoint
+    - `auth_token` config key (`ANTHROPIC_AUTH_TOKEN` env var) — override the auth token for custom providers
+- `ProcessTransport` now forwards `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN` to the CLI subprocess
+- Updated wiki Configuration page with new provider options
+
 ## [1.1.0] - 2025-02-23
 
 ### Added

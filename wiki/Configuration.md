@@ -35,6 +35,12 @@ return [
     // Max thinking tokens (null = CLI default)
     'max_thinking_tokens' => env('CLAUDE_AGENT_MAX_THINKING_TOKENS', null),
 
+    // Custom API base URL (for self-hosted / compatible providers)
+    'api_base_url' => env('ANTHROPIC_BASE_URL', null),
+
+    // Custom auth token (for providers using a different auth header)
+    'auth_token' => env('ANTHROPIC_AUTH_TOKEN', null),
+
     // Third-party provider flags
     'providers' => [
         'bedrock' => env('CLAUDE_CODE_USE_BEDROCK', false),

@@ -26,6 +26,8 @@ class ProcessTransport
 
         $this->defaultEnv = array_filter([
             'ANTHROPIC_API_KEY' => $config['api_key'] ?? null,
+            'ANTHROPIC_BASE_URL' => $config['api_base_url'] ?? null,
+            'ANTHROPIC_AUTH_TOKEN' => $config['auth_token'] ?? null,
         ]);
 
         if (! empty($config['providers']['bedrock'])) {
