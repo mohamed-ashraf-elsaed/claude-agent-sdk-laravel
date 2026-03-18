@@ -1,14 +1,20 @@
 {
   "name": "mohamed-ashraf-elsaed/claude-agent-sdk-laravel",
-  "description": "Laravel SDK for Claude Agent — build AI agents with Claude Code as a library",
-  "keywords": ["laravel", "claude", "ai", "agent", "anthropic", "sdk", "claude-code", "llm", "ai-agent", "mcp", "laravel-package", "php-sdk", "agentic-ai", "automation", "code-generation"],
+  "description": "Anthropic Claude Agent SDK for PHP & Laravel — build AI agents with tool use, sandboxing, MCP servers, subagents, hooks, and structured output via the Claude Code CLI",
+  "keywords": ["laravel", "claude", "ai", "agent", "anthropic", "sdk", "claude-code", "llm", "ai-agent", "mcp", "laravel-package", "php-sdk", "agentic-ai", "automation", "code-generation", "anthropic-sdk", "claude-agent", "ai-sdk", "claude-api", "php-ai", "ai-tools", "claude-laravel"],
   "license": "MIT",
+  "homepage": "https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel",
   "authors": [
     {
       "name": "Mohamed Ashraf",
       "email": "m.ashraf.saed@gmail.com"
     }
   ],
+  "support": {
+    "issues": "https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel/issues",
+    "source": "https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel",
+    "docs": "https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel/wiki"
+  },
   "require": {
     "php": "^8.1|^8.2|^8.3|^8.4",
     "illuminate/support": "^10.0|^11.0|^12.0",
