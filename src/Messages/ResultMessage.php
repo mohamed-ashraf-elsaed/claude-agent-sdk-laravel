@@ -6,6 +6,13 @@ use ClaudeAgentSDK\Data\ModelUsage;
 
 class ResultMessage extends Message
 {
+    /** Result subtypes */
+    public const SUBTYPE_SUCCESS = 'success';
+    public const SUBTYPE_ERROR_MAX_TURNS = 'error_max_turns';
+    public const SUBTYPE_ERROR_DURING_EXECUTION = 'error_during_execution';
+    public const SUBTYPE_ERROR_MAX_BUDGET = 'error_max_budget_usd';
+    public const SUBTYPE_ERROR_MAX_STRUCTURED_OUTPUT_RETRIES = 'error_max_structured_output_retries';
+
     public function __construct(
         public readonly string  $subtype,
         public readonly ?string $result = null,
@@ -18,6 +25,10 @@ class ResultMessage extends Message
         public readonly ?array  $usage = null,
         public readonly ?array  $modelUsage = null,
         public readonly ?array  $structuredOutput = null,
+        /** @var array[] Permission denials that occurred during the query */
+        public readonly array   $permissionDenials = [],
+        /** @var array[] Errors encountered during execution */
+        public readonly array   $errors = [],
         array                   $raw = [],
     ) {
         parent::__construct('result', $raw);
@@ -37,13 +48,47 @@ class ResultMessage extends Message
             usage: $data['usage'] ?? null,
             modelUsage: $data['model_usage'] ?? $data['modelUsage'] ?? null,
             structuredOutput: $data['structured_output'] ?? null,
+            permissionDenials: $data['permission_denials'] ?? [],
+            errors: $data['errors'] ?? [],
             raw: $data,
         );
     }
 
     public function isSuccess(): bool
     {
-        return $this->subtype === 'success';
+        return $this->subtype === self::SUBTYPE_SUCCESS;
+    }
+
+    /**
+     * Check if the agent stopped because it reached the max turns limit.
+     */
+    public function isMaxTurnsError(): bool
+    {
+        return $this->subtype === self::SUBTYPE_ERROR_MAX_TURNS;
+    }
+
+    /**
+     * Check if the agent stopped due to a budget limit.
+     */
+    public function isBudgetError(): bool
+    {
+        return $this->subtype === self::SUBTYPE_ERROR_MAX_BUDGET;
+    }
+
+    /**
+     * Check if the agent stopped due to an execution error.
+     */
+    public function isExecutionError(): bool
+    {
+        return $this->subtype === self::SUBTYPE_ERROR_DURING_EXECUTION;
+    }
+
+    /**
+     * Check if the agent stopped because structured output validation failed.
+     */
+    public function isStructuredOutputError(): bool
+    {
+        return $this->subtype === self::SUBTYPE_ERROR_MAX_STRUCTURED_OUTPUT_RETRIES;
     }
 
     /**

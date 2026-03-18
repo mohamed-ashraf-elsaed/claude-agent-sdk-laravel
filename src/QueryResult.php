@@ -17,6 +17,9 @@ class QueryResult
 
     public readonly ?string $sessionId;
 
+    /** @var SystemMessage|null The init system message from this query */
+    public readonly ?SystemMessage $initMessage;
+
     /**
      * @param Message[] $messages
      */
@@ -28,19 +31,24 @@ class QueryResult
         $results = array_filter($messages, fn($m) => $m instanceof ResultMessage);
         $this->result = ! empty($results) ? end($results) : null;
 
-        // Extract session ID
+        // Extract session ID and init message
         $sessionId = null;
+        $initMessage = null;
         foreach ($messages as $msg) {
-            if ($msg instanceof SystemMessage && $msg->sessionId) {
-                $sessionId = $msg->sessionId;
-                break;
+            if ($msg instanceof SystemMessage) {
+                if ($msg->isInit()) {
+                    $initMessage = $msg;
+                }
+                if ($msg->sessionId && $sessionId === null) {
+                    $sessionId = $msg->sessionId;
+                }
             }
-            if ($msg instanceof ResultMessage && $msg->sessionId) {
+            if ($msg instanceof ResultMessage && $msg->sessionId && $sessionId === null) {
                 $sessionId = $msg->sessionId;
-                break;
             }
         }
         $this->sessionId = $sessionId;
+        $this->initMessage = $initMessage;
     }
 
     /**
@@ -97,6 +105,50 @@ class QueryResult
     public function durationMs(): int
     {
         return $this->result?->durationMs ?? 0;
+    }
+
+    /**
+     * Get the result subtype (success, error_max_turns, error_during_execution, etc.).
+     */
+    public function subtype(): ?string
+    {
+        return $this->result?->subtype;
+    }
+
+    /**
+     * Check if the agent stopped because it reached the max turns limit.
+     */
+    public function isMaxTurnsError(): bool
+    {
+        return $this->result?->isMaxTurnsError() ?? false;
+    }
+
+    /**
+     * Check if the agent stopped due to a budget limit.
+     */
+    public function isBudgetError(): bool
+    {
+        return $this->result?->isBudgetError() ?? false;
+    }
+
+    /**
+     * Get all permission denials from the result.
+     *
+     * @return array[] Each entry has tool_name, tool_use_id, tool_input
+     */
+    public function permissionDenials(): array
+    {
+        return $this->result?->permissionDenials ?? [];
+    }
+
+    /**
+     * Get all errors from the result.
+     *
+     * @return array[]
+     */
+    public function errors(): array
+    {
+        return $this->result?->errors ?? [];
     }
 
     /**
@@ -162,5 +214,43 @@ class QueryResult
     public function cacheCreationTokens(): int
     {
         return $this->result?->cacheCreationTokens() ?? 0;
+    }
+
+    /**
+     * Get the model used in this session (from init message).
+     */
+    public function model(): ?string
+    {
+        return $this->initMessage?->model;
+    }
+
+    /**
+     * Get available tools in this session (from init message).
+     *
+     * @return string[]
+     */
+    public function availableTools(): array
+    {
+        return $this->initMessage?->tools ?? [];
+    }
+
+    /**
+     * Get MCP server statuses (from init message).
+     *
+     * @return array[]
+     */
+    public function mcpServerStatus(): array
+    {
+        return $this->initMessage?->mcpServers ?? [];
+    }
+
+    /**
+     * Get available slash commands (from init message).
+     *
+     * @return array[]
+     */
+    public function supportedCommands(): array
+    {
+        return $this->initMessage?->slashCommands ?? [];
     }
 }

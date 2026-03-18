@@ -22,6 +22,9 @@ Main entry point. Methods:
 - streamCollect(string $prompt, ?callable $onMessage, $options = null): QueryResult
 - withOptions($options): static
 - stop(): void
+- interrupt(): void
+- isRunning(): bool
+- rewindFiles(sessionId, messageUuid): QueryResult
 
 ### ClaudeAgentOptions (Fluent Builder)
 ClaudeAgentOptions::make()
@@ -40,6 +43,15 @@ ClaudeAgentOptions::make()
   ->env('KEY', 'value')
   ->sandbox(['enabled' => true, 'autoAllowBashIfSandboxed' => true])
   ->plugin('/path/to/plugin')
+  ->canUseTool(fn($tool, $input) => new PermissionResultAllow())
+  ->stderr(fn($data) => Log::warning($data))
+  ->permissionPromptToolName('my_mcp_tool')
+  ->resumeSessionAt('msg_uuid')
+  ->allowDangerouslySkipPermissions(true)
+
+### Permission Types
+- PermissionResultAllow(?array $updatedInput, ?array $updatedPermissions)
+- PermissionResultDeny(string $message, bool $interrupt)
 
 ### QueryResult
 - text(): ?string — final result text
@@ -53,6 +65,15 @@ ClaudeAgentOptions::make()
 - assistantMessages(): AssistantMessage[]
 - fullText(): string
 - toolUses(): ToolUseBlock[]
+- subtype(): ?string
+- isMaxTurnsError(): bool
+- isBudgetError(): bool
+- permissionDenials(): array
+- errors(): array
+- model(): ?string
+- availableTools(): array
+- mcpServerStatus(): array
+- supportedCommands(): array
 
 ### Message Types
 - AssistantMessage — text(), toolUses(), $id, $model, $parentToolUseId
@@ -75,9 +96,13 @@ new AgentDefinition(
   model: 'sonnet'
 )
 
-### McpServerConfig
+### Hook Events (12 total)
+PreToolUse, PostToolUse, PostToolUseFailure, UserPromptSubmit, Notification, SessionStart, SessionEnd, Stop, SubagentStart, SubagentStop, PreCompact, PermissionRequest
+
+### McpServerConfig (MCP Transports)
 McpServerConfig::stdio('npx', ['@mcp/server-db'], ['DB_URL' => '...'])
 McpServerConfig::sse('http://localhost:3000/mcp', ['Authorization' => 'Bearer ...'])
+McpServerConfig::http('http://localhost:3000/mcp', ['Authorization' => 'Bearer ...'])
 
 ### Exceptions
 - ClaudeAgentException (base)

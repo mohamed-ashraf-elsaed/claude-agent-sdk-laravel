@@ -262,6 +262,25 @@ $options = ClaudeAgentOptions::make()
     ->hook(HookEvent::Stop, HookMatcher::command('php /hooks/cleanup.php'));
 ```
 
+### Hook Events
+
+The `HookEvent` enum defines all 12 lifecycle events that accept hooks:
+
+| Event | Description |
+|-------|-------------|
+| `PreToolUse` | Before a tool is executed |
+| `PostToolUse` | After a tool completes successfully |
+| `PostToolUseFailure` | After a tool execution fails |
+| `UserPromptSubmit` | When the user prompt is submitted |
+| `Notification` | On agent notifications |
+| `SessionStart` | When a session starts |
+| `SessionEnd` | When a session ends |
+| `Stop` | When the agent stops |
+| `SubagentStart` | When a sub-agent starts |
+| `SubagentStop` | When a sub-agent stops |
+| `PreCompact` | Before context compaction |
+| `PermissionRequest` | When a permission request is made |
+
 See [[Hooks]] for advanced hook patterns including multiple matchers and `HookMatcher::phpScript()`.
 
 ---
@@ -420,6 +439,11 @@ $env = $options->toEnv(['HOME' => '/home/app']);
 | `sandbox(array)` | Sandbox configuration | `--settings` (JSON) |
 | `plugin(string)` | Add a local plugin | `--plugins` |
 | `enableFileCheckpointing(bool)` | Enable file checkpointing | `--enable-file-checkpointing` |
+| `canUseTool(callable)` | Custom permission handler | IPC hook |
+| `stderr(callable)` | Stderr output callback | Process stderr |
+| `permissionPromptToolName(string)` | MCP permission prompt tool | `--permission-prompt-tool-name` |
+| `allowDangerouslySkipPermissions(bool)` | Bypass permissions guard | Safety check |
+| `resumeSessionAt(string)` | Resume at specific message | `--resume-session-at` |
 | `static make()` | Create new options instance | -- |
 | `static fromArray(array)` | Create from array (snake_case keys) | -- |
 | `toCliArgs()` | Build CLI argument array | -- |

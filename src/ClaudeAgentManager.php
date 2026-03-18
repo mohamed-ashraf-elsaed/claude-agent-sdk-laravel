@@ -3,6 +3,7 @@
 namespace ClaudeAgentSDK;
 
 use ClaudeAgentSDK\Messages\Message;
+use ClaudeAgentSDK\Messages\SystemMessage;
 use ClaudeAgentSDK\Options\ClaudeAgentOptions;
 use ClaudeAgentSDK\Transport\ProcessTransport;
 use Generator;
@@ -12,6 +13,9 @@ class ClaudeAgentManager
     private ProcessTransport $transport;
     private array $config;
     private ?ClaudeAgentOptions $defaultOptions = null;
+
+    /** @var SystemMessage|null Cached init message from the last query */
+    private ?SystemMessage $lastInitMessage = null;
 
     public function __construct(array $config = [])
     {
@@ -39,6 +43,8 @@ class ClaudeAgentManager
     {
         $opts = $this->resolveOptions($options);
         $messages = $this->transport->run($prompt, $opts);
+
+        $this->cacheInitMessage($messages);
 
         return new QueryResult($messages);
     }
@@ -144,6 +150,8 @@ class ClaudeAgentManager
             }
         }
 
+        $this->cacheInitMessage($messages);
+
         return new QueryResult($messages);
     }
 
@@ -159,10 +167,101 @@ class ClaudeAgentManager
     }
 
     /**
-     * Stop any running process.
+     * Stop any running process (hard stop via SIGINT).
      */
     public function stop(): void
     {
         $this->transport->stop();
+    }
+
+    /**
+     * Send an interrupt signal to the running agent.
+     *
+     * Unlike stop(), this is intended to gracefully interrupt the agent,
+     * allowing it to finish its current thought before stopping.
+     */
+    public function interrupt(): void
+    {
+        $this->transport->interrupt();
+    }
+
+    /**
+     * Check if the agent is currently running.
+     */
+    public function isRunning(): bool
+    {
+        return $this->transport->isRunning();
+    }
+
+    /**
+     * Rewind files to the state at a specific user message UUID.
+     *
+     * Requires enableFileCheckpointing to be set on the original query.
+     * Spawns a new CLI process to restore files.
+     *
+     * @param  string  $sessionId  The session ID from the original query
+     * @param  string  $messageUuid  The user message UUID to rewind to
+     */
+    public function rewindFiles(string $sessionId, string $messageUuid): QueryResult
+    {
+        $opts = ClaudeAgentOptions::make()
+            ->resume($sessionId)
+            ->resumeSessionAt($messageUuid)
+            ->enableFileCheckpointing();
+
+        return $this->query('Rewind files to the specified checkpoint.', $opts);
+    }
+
+    /**
+     * Get available slash commands from the last session's init message.
+     *
+     * @return array[]
+     */
+    public function supportedCommands(): array
+    {
+        return $this->lastInitMessage?->slashCommands ?? [];
+    }
+
+    /**
+     * Get the model used in the last session.
+     */
+    public function lastModel(): ?string
+    {
+        return $this->lastInitMessage?->model;
+    }
+
+    /**
+     * Get MCP server statuses from the last session's init message.
+     *
+     * @return array[]
+     */
+    public function mcpServerStatus(): array
+    {
+        return $this->lastInitMessage?->mcpServers ?? [];
+    }
+
+    /**
+     * Get available tools from the last session's init message.
+     *
+     * @return string[]
+     */
+    public function availableTools(): array
+    {
+        return $this->lastInitMessage?->tools ?? [];
+    }
+
+    /**
+     * Cache the init message from a set of messages.
+     *
+     * @param  Message[]  $messages
+     */
+    private function cacheInitMessage(array $messages): void
+    {
+        foreach ($messages as $msg) {
+            if ($msg instanceof SystemMessage && $msg->isInit()) {
+                $this->lastInitMessage = $msg;
+                break;
+            }
+        }
     }
 }
