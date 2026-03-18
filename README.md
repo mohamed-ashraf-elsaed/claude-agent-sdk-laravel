@@ -2,6 +2,9 @@
 
 [![Tests](https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel/actions/workflows/tests.yml/badge.svg)](https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel/actions)
 [![Latest Version](https://img.shields.io/packagist/v/mohamed-ashraf-elsaed/claude-agent-sdk-laravel.svg)](https://packagist.org/packages/mohamed-ashraf-elsaed/claude-agent-sdk-laravel)
+[![Total Downloads](https://img.shields.io/packagist/dt/mohamed-ashraf-elsaed/claude-agent-sdk-laravel.svg)](https://packagist.org/packages/mohamed-ashraf-elsaed/claude-agent-sdk-laravel)
+[![PHP Version](https://img.shields.io/packagist/php-v/mohamed-ashraf-elsaed/claude-agent-sdk-laravel.svg)](https://packagist.org/packages/mohamed-ashraf-elsaed/claude-agent-sdk-laravel)
+[![Laravel](https://img.shields.io/badge/Laravel-10%20|%2011%20|%2012-red.svg)](https://laravel.com)
 [![License](https://img.shields.io/packagist/l/mohamed-ashraf-elsaed/claude-agent-sdk-laravel.svg)](LICENSE)
 
 Build AI agents with Claude Code as a library in your Laravel applications. This SDK wraps the Claude Code CLI to give your app access to file operations, bash commands, code editing, web search, subagents, and more.
@@ -416,6 +419,16 @@ To run with coverage:
 ```bash
 vendor/bin/phpunit --coverage-html coverage/
 ```
+
+## Support
+
+If you find this package useful, please consider giving it a star on GitHub. It helps others discover the package and motivates continued development.
+
+[![GitHub stars](https://img.shields.io/github/stars/mohamed-ashraf-elsaed/claude-agent-sdk-laravel?style=social)](https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel)
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
