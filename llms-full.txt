@@ -38,7 +38,7 @@ ClaudeAgentOptions::make()
   ->mcpServer('name', McpServerConfig::stdio('npx', ['server']))
   ->agent('name', new AgentDefinition('desc', 'prompt', ['tools']))
   ->env('KEY', 'value')
-  ->sandbox(['type' => 'docker'])
+  ->sandbox(['enabled' => true, 'autoAllowBashIfSandboxed' => true])
   ->plugin('/path/to/plugin')
 
 ### QueryResult

@@ -93,7 +93,7 @@ Fluent builder for every CLI flag and environment variable. All setter methods r
 | **Hooks** | `hook(HookEvent $event, HookMatcher $matcher)` | Attach a hook matcher to any lifecycle event. |
 | | `preToolUse(string $command, ?string $matcher = null, ?int $timeout = null)` | Shorthand: attach a shell command as a `PreToolUse` hook. |
 | | `postToolUse(string $command, ?string $matcher = null, ?int $timeout = null)` | Shorthand: attach a shell command as a `PostToolUse` hook. |
-| **Advanced** | `sandbox(array $settings)` | Configure sandboxing settings for the CLI process. |
+| **Advanced** | `sandbox(array $settings)` | Configure sandbox behavior for command execution. Passed via `--settings` as JSON. Supports `enabled`, `autoAllowBashIfSandboxed`, `excludedCommands`, `network`, etc. |
 | | `plugin(string $path)` | Register a local plugin by filesystem path. |
 | | `enableFileCheckpointing(bool $enable = true)` | Enable or disable file checkpointing. |
 | | `extraArg(string $flag, ?string $value = null)` | Pass an arbitrary CLI flag not covered by the fluent API. |

@@ -171,9 +171,15 @@ class ClaudeAgentOptionsTest extends TestCase
 
     public function test_fluent_sandbox(): void
     {
-        $opts = ClaudeAgentOptions::make()->sandbox(['type' => 'docker']);
+        $opts = ClaudeAgentOptions::make()->sandbox([
+            'enabled' => true,
+            'autoAllowBashIfSandboxed' => true,
+        ]);
 
-        $this->assertSame(['type' => 'docker'], $opts->sandbox);
+        $this->assertSame([
+            'enabled' => true,
+            'autoAllowBashIfSandboxed' => true,
+        ], $opts->sandbox);
     }
 
     public function test_fluent_plugin(): void
@@ -623,6 +629,77 @@ class ClaudeAgentOptionsTest extends TestCase
         $this->assertContains('context-1m-2025-08-07', $args);
     }
 
+    public function test_cli_args_sandbox(): void
+    {
+        $opts = ClaudeAgentOptions::make()->sandbox([
+            'enabled' => true,
+            'autoAllowBashIfSandboxed' => true,
+            'excludedCommands' => ['docker'],
+        ]);
+        $args = $opts->toCliArgs();
+
+        $this->assertContains('--settings', $args);
+        $this->assertNotContains('--sandbox', $args);
+
+        $idx = array_search('--settings', $args);
+        $decoded = json_decode($args[$idx + 1], true);
+
+        $this->assertArrayHasKey('sandbox', $decoded);
+        $this->assertTrue($decoded['sandbox']['enabled']);
+        $this->assertTrue($decoded['sandbox']['autoAllowBashIfSandboxed']);
+        $this->assertSame(['docker'], $decoded['sandbox']['excludedCommands']);
+    }
+
+    public function test_cli_args_sandbox_with_network(): void
+    {
+        $opts = ClaudeAgentOptions::make()->sandbox([
+            'enabled' => true,
+            'network' => [
+                'allowLocalBinding' => true,
+                'allowUnixSockets' => ['/var/run/docker.sock'],
+            ],
+        ]);
+        $args = $opts->toCliArgs();
+
+        $idx = array_search('--settings', $args);
+        $decoded = json_decode($args[$idx + 1], true);
+
+        $this->assertTrue($decoded['sandbox']['enabled']);
+        $this->assertTrue($decoded['sandbox']['network']['allowLocalBinding']);
+        $this->assertSame(
+            ['/var/run/docker.sock'],
+            $decoded['sandbox']['network']['allowUnixSockets'],
+        );
+    }
+
+    public function test_cli_args_sandbox_not_present_when_null(): void
+    {
+        $args = ClaudeAgentOptions::make()->toCliArgs();
+
+        // Sandbox should not generate any --settings flag when not configured
+        $this->assertNotContains('--sandbox', $args);
+    }
+
+    public function test_cli_args_sandbox_coexists_with_settings_file(): void
+    {
+        $opts = ClaudeAgentOptions::make()
+            ->settings('/path/settings.json')
+            ->sandbox(['enabled' => true]);
+        $args = $opts->toCliArgs();
+
+        // Both --settings entries should be present
+        $settingsIndices = array_keys(array_filter($args, fn($v) => $v === '--settings'));
+        $this->assertCount(2, $settingsIndices);
+
+        // First --settings is the file path
+        $this->assertSame('/path/settings.json', $args[$settingsIndices[0] + 1]);
+
+        // Second --settings is sandbox JSON
+        $sandboxJson = json_decode($args[$settingsIndices[1] + 1], true);
+        $this->assertArrayHasKey('sandbox', $sandboxJson);
+        $this->assertTrue($sandboxJson['sandbox']['enabled']);
+    }
+
     public function test_cli_args_absent_when_not_set(): void
     {
         $args = ClaudeAgentOptions::make()->toCliArgs();
@@ -634,7 +711,7 @@ class ClaudeAgentOptionsTest extends TestCase
             '--include-partial-messages', '--model', '--permission-mode',
             '--max-turns', '--resume', '--fork-session', '--system-prompt',
             '--allowed-tools', '--disallowed-tools', '--mcp-servers',
-            '--agents', '--plugins', '--sandbox',
+            '--agents', '--plugins',
         ];
 
         foreach ($absent as $flag) {

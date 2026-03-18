@@ -114,13 +114,21 @@ $options = ClaudeAgentOptions::make()
 
 ## Sandboxing
 
-For maximum isolation, run the agent inside a sandbox that restricts network access, filesystem writes, or both.
+For maximum isolation, enable the built-in sandbox to restrict command execution, network access, and filesystem writes.
 
 ```php
 use ClaudeAgentSDK\Options\ClaudeAgentOptions;
 
 $options = ClaudeAgentOptions::make()
-    ->sandbox(['network' => false, 'filesystem' => 'read-only']);
+    ->sandbox([
+        'enabled' => true,
+        'autoAllowBashIfSandboxed' => true,
+        'excludedCommands' => ['docker'],
+        'network' => [
+            'allowLocalBinding' => true,
+            'allowUnixSockets' => ['/var/run/docker.sock'],
+        ],
+    ]);
 ```
 
 ### Docker Sandbox Example

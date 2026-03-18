@@ -204,6 +204,20 @@ class ClaudeAgentOptions
         return $this;
     }
 
+    /**
+     * Configure sandbox behavior for command execution.
+     *
+     * Sandbox settings control how Bash commands are isolated. Supported keys:
+     * - enabled (bool): Enable sandbox mode
+     * - autoAllowBashIfSandboxed (bool): Auto-approve bash when sandboxed
+     * - excludedCommands (string[]): Commands that bypass the sandbox
+     * - allowUnsandboxedCommands (bool): Allow model to request unsandboxed execution
+     * - network (array): Network sandbox settings (allowLocalBinding, allowUnixSockets, etc.)
+     * - ignoreViolations (array): Configure which violations to ignore
+     * - enableWeakerNestedSandbox (bool): Enable weaker nested sandbox for compatibility
+     *
+     * @param  array  $settings  SandboxSettings configuration array
+     */
     public function sandbox(array $settings): static
     {
         $this->sandbox = $settings;
@@ -416,8 +430,8 @@ class ClaudeAgentOptions
         }
 
         if ($this->sandbox) {
-            $args[] = '--sandbox';
-            $args[] = json_encode($this->sandbox);
+            $args[] = '--settings';
+            $args[] = json_encode(['sandbox' => $this->sandbox]);
         }
 
         if ($this->enableFileCheckpointing) {
