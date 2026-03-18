@@ -243,6 +243,57 @@ $options = ClaudeAgentOptions::make()
 
 This records every tool invocation for later review, compliance, or incident investigation.
 
+## Custom Permission Handling with `canUseTool`
+
+For fine-grained, programmatic control over tool permissions, use the `canUseTool()` option to register a custom permission handler. Unlike hooks (which run as external shell commands), `canUseTool()` runs your callback in the parent PHP process via IPC, giving you full access to the Laravel container, database, Eloquent models, and application state.
+
+The callback receives the tool name and input array, and must return either a `PermissionResultAllow` or `PermissionResultDeny`.
+
+```php
+use ClaudeAgentSDK\Options\ClaudeAgentOptions;
+use ClaudeAgentSDK\Permissions\PermissionResultAllow;
+use ClaudeAgentSDK\Permissions\PermissionResultDeny;
+
+$options = ClaudeAgentOptions::make()
+    ->canUseTool(function (string $toolName, array $input) {
+        // Redirect file operations to sandbox directory
+        if (in_array($toolName, ['Write', 'Edit'])) {
+            $safePath = '/sandbox/' . ltrim($input['file_path'] ?? '', '/');
+            return new PermissionResultAllow(
+                updatedInput: array_merge($input, ['file_path' => $safePath])
+            );
+        }
+        // Block dangerous commands
+        if ($toolName === 'Bash' && preg_match('/rm\s+-rf|sudo|chmod/', $input['command'] ?? '')) {
+            return new PermissionResultDeny('Dangerous command blocked', interrupt: true);
+        }
+        return new PermissionResultAllow();
+    });
+```
+
+### Key Differences: `canUseTool` vs Hooks
+
+| Feature | `canUseTool` | Hooks |
+|---------|-------------|-------|
+| Execution context | In-process PHP (IPC) | External shell command |
+| Access to Laravel | Full (container, DB, models) | None (separate process) |
+| Input modification | `PermissionResultAllow::$updatedInput` | Hook JSON output |
+| Interrupt execution | `PermissionResultDeny::$interrupt` | Hook `continue: false` |
+| Configuration | Single callable | Per-event matchers |
+
+### Best Practice: `allowDangerouslySkipPermissions`
+
+When using `bypassPermissions` mode, always pair it with `allowDangerouslySkipPermissions(true)` as an explicit opt-in safety guard. This prevents accidental unrestricted access if a permission mode is misconfigured.
+
+```php
+// Production: NEVER do this without the explicit opt-in
+$options = ClaudeAgentOptions::make()
+    ->permission('bypassPermissions')
+    ->allowDangerouslySkipPermissions(true);  // Required safety acknowledgement
+```
+
+> **Warning:** Omitting `allowDangerouslySkipPermissions(true)` when using `bypassPermissions` will cause a safety error. This is intentional -- it forces developers to explicitly acknowledge the security implications.
+
 ## Network Security
 
 The agent can access the network through `WebFetch`, `WebSearch`, and MCP servers.

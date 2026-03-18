@@ -17,6 +17,13 @@ Primary entry point for all interactions with the Claude Code CLI. Instantiated 
 | `withOptions(ClaudeAgentOptions\|array $options)` | `static` | Return a **cloned** manager with default options applied. Original instance is unchanged. |
 | `options()` | `ClaudeAgentOptions` | Create a new `ClaudeAgentOptions` builder pre-filled with values from the resolved config. |
 | `stop()` | `void` | Send `SIGINT` to the running CLI process, gracefully terminating the current query. |
+| `interrupt()` | `void` | Gracefully interrupt the agent, allowing it to finish its current thought before stopping. |
+| `isRunning()` | `bool` | Check if the agent is currently running. |
+| `rewindFiles(string $sessionId, string $messageUuid)` | `QueryResult` | Rewind files to the state at a specific user message UUID. Requires `enableFileCheckpointing` on the original query. |
+| `supportedCommands()` | `array[]` | Get available slash commands from the last session's init message. |
+| `lastModel()` | `?string` | Get the model used in the last session. |
+| `mcpServerStatus()` | `array[]` | Get MCP server statuses from the last session's init message. |
+| `availableTools()` | `string[]` | Get available tools from the last session's init message. |
 
 ---
 
@@ -49,6 +56,15 @@ Immutable value object returned by `query()` and `streamCollect()`. Wraps the fu
 | `modelUsage()` | `array<string, ModelUsage>` | Per-model token and cost breakdown as typed `ModelUsage` objects. |
 | `cacheReadTokens()` | `int` | Sum of cache-read input tokens across all models. |
 | `cacheCreationTokens()` | `int` | Sum of cache-creation input tokens across all models. |
+| `subtype()` | `?string` | Get the result subtype (`'success'`, `'error_max_turns'`, `'error_during_execution'`, etc.). |
+| `isMaxTurnsError()` | `bool` | `true` when the agent stopped because it reached the max turns limit. |
+| `isBudgetError()` | `bool` | `true` when the agent stopped due to a budget limit. |
+| `permissionDenials()` | `array[]` | All permission denials from the result. Each entry has `tool_name`, `tool_use_id`, `tool_input`. |
+| `errors()` | `array[]` | All errors from the result. |
+| `model()` | `?string` | Get the model used in this session (from init message). |
+| `availableTools()` | `string[]` | Get available tools in this session (from init message). |
+| `mcpServerStatus()` | `array[]` | Get MCP server statuses (from init message). |
+| `supportedCommands()` | `array[]` | Get available slash commands (from init message). |
 
 ---
 
@@ -93,6 +109,11 @@ Fluent builder for every CLI flag and environment variable. All setter methods r
 | **Hooks** | `hook(HookEvent $event, HookMatcher $matcher)` | Attach a hook matcher to any lifecycle event. |
 | | `preToolUse(string $command, ?string $matcher = null, ?int $timeout = null)` | Shorthand: attach a shell command as a `PreToolUse` hook. |
 | | `postToolUse(string $command, ?string $matcher = null, ?int $timeout = null)` | Shorthand: attach a shell command as a `PostToolUse` hook. |
+| **Permissions** | `canUseTool(callable $handler)` | Custom permission handler for tool use approval/denial. The callable receives `(string $toolName, array $toolInput)` and must return a `PermissionResultAllow` or `PermissionResultDeny`. Uses IPC so closures have full access to your application (Laravel container, DB, etc.). |
+| | `permissionPromptToolName(string $toolName)` | Set the MCP tool name for permission prompts. Maps to CLI flag `--permission-prompt-tool-name`. |
+| | `allowDangerouslySkipPermissions(bool $allow = true)` | Safety guard for `bypassPermissions` mode. Must be set to `true` explicitly when using `bypassPermissions` to prevent accidental unrestricted access. |
+| **Process** | `stderr(callable $callback)` | Callback for stderr output from the CLI process. The callable receives `(string $data)` for each chunk of stderr output. |
+| **Session** | `resumeSessionAt(string $messageUuid)` | Resume at a specific message UUID. More granular than `resume()` — allows branching from a specific point in a previous conversation. Maps to CLI flag `--resume-session-at`. |
 | **Advanced** | `sandbox(array $settings)` | Configure sandbox behavior for command execution. Passed via `--settings` as JSON. Supports `enabled`, `autoAllowBashIfSandboxed`, `excludedCommands`, `network`, etc. |
 | | `plugin(string $path)` | Register a local plugin by filesystem path. |
 | | `enableFileCheckpointing(bool $enable = true)` | Enable or disable file checkpointing. |
@@ -273,8 +294,43 @@ Configuration for a Model Context Protocol server. Implements `JsonSerializable`
 |--------|------|-------------|
 | `stdio(string $command, array $args = [], array $env = [])` | `static` | Create a stdio-transport MCP server config. |
 | `sse(string $url, array $headers = [])` | `static` | Create an SSE-transport MCP server config. |
+| `http(string $url, array $headers = [])` | `static` | Create an HTTP-transport MCP server config. |
 | `toArray()` | `array` | Serialize to the array format expected by the CLI. |
 | `jsonSerialize()` | `array` | JSON serialization (delegates to `toArray()`). |
+
+---
+
+## Permission Types
+
+Permission result types used with `canUseTool()` to approve or deny tool use requests. All types extend the abstract `PermissionResult` base class, which implements `JsonSerializable`.
+
+### PermissionResult (abstract base)
+
+| Member | Type | Description |
+|--------|------|-------------|
+| `toArray()` | `array` | Serialize to array format. |
+| `jsonSerialize()` | `array` | JSON serialization (delegates to `toArray()`). |
+| `toHookOutput()` | `array` | Convert to hook-compatible output format for the CLI. |
+
+### PermissionResultAllow
+
+Allow the tool to execute, optionally with modified input or updated permissions.
+
+| Member | Type | Description |
+|--------|------|-------------|
+| `__construct(?array $updatedInput = null, ?array $updatedPermissions = null)` | — | Create an allow result. Both parameters are optional. |
+| `$updatedInput` | `readonly ?array` | Modified tool input to use instead of the original. Pass `null` to keep the original input unchanged. |
+| `$updatedPermissions` | `readonly ?array` | Permission updates (`addRules`, `removeRules`, `setMode`, etc.). Pass `null` to leave permissions unchanged. |
+
+### PermissionResultDeny
+
+Deny the tool from executing, with an explanation message and optional interruption.
+
+| Member | Type | Description |
+|--------|------|-------------|
+| `__construct(string $message = '', bool $interrupt = false)` | — | Create a deny result. |
+| `$message` | `readonly string` | Explanation shown to the agent for why the tool was denied. |
+| `$interrupt` | `readonly bool` | If `true`, stops agent execution entirely (not just the current tool call). |
 
 ---
 
@@ -287,11 +343,17 @@ Backed string enum defining the lifecycle events that accept hooks. See [[Hooks]
 | Case | Value | Description |
 |------|-------|-------------|
 | `PreToolUse` | `'PreToolUse'` | Fires before a tool is executed. |
-| `PostToolUse` | `'PostToolUse'` | Fires after a tool completes. |
+| `PostToolUse` | `'PostToolUse'` | Fires after a tool completes successfully. |
+| `PostToolUseFailure` | `'PostToolUseFailure'` | Fires after a tool execution fails. |
 | `UserPromptSubmit` | `'UserPromptSubmit'` | Fires when the user prompt is submitted. |
+| `Notification` | `'Notification'` | Fires on agent notifications. |
+| `SessionStart` | `'SessionStart'` | Fires when a session starts. |
+| `SessionEnd` | `'SessionEnd'` | Fires when a session ends. |
 | `Stop` | `'Stop'` | Fires when the agent stops. |
+| `SubagentStart` | `'SubagentStart'` | Fires when a sub-agent starts. |
 | `SubagentStop` | `'SubagentStop'` | Fires when a sub-agent stops. |
 | `PreCompact` | `'PreCompact'` | Fires before context compaction. |
+| `PermissionRequest` | `'PermissionRequest'` | Fires when a permission request is made. |
 
 ### HookMatcher
 
@@ -335,4 +397,4 @@ $stream = ClaudeAgent::stream('Explain the architecture');
 $agent  = ClaudeAgent::withOptions(['model' => 'claude-sonnet-4-20250514']);
 ```
 
-The facade proxies every public method on `ClaudeAgentManager`: `query()`, `stream()`, `streamCollect()`, `withOptions()`, `options()`, and `stop()`.
+The facade proxies every public method on `ClaudeAgentManager`: `query()`, `stream()`, `streamCollect()`, `withOptions()`, `options()`, `stop()`, `interrupt()`, `isRunning()`, `rewindFiles()`, `supportedCommands()`, `lastModel()`, `mcpServerStatus()`, and `availableTools()`.

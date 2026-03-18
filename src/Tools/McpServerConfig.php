@@ -25,6 +25,11 @@ class McpServerConfig implements JsonSerializable
         return new static(command: $url, args: [], env: $headers, type: 'sse');
     }
 
+    public static function http(string $url, array $headers = []): static
+    {
+        return new static(command: $url, args: [], env: $headers, type: 'http');
+    }
+
     public function jsonSerialize(): array
     {
         return $this->toArray();
@@ -32,9 +37,9 @@ class McpServerConfig implements JsonSerializable
 
     public function toArray(): array
     {
-        if ($this->type === 'sse') {
+        if ($this->type === 'sse' || $this->type === 'http') {
             return array_filter([
-                'type' => 'sse',
+                'type' => $this->type,
                 'url' => $this->command,
                 'headers' => !empty($this->env) ? $this->env : null,
             ], fn($v) => $v !== null);

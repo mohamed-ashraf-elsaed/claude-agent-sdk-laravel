@@ -76,6 +76,18 @@ class ClaudeAgentOptions
     /** @var string[] */
     public array $betas = [];
 
+    /** @var callable|null Custom permission handler called before each tool use */
+    public $canUseTool = null;
+
+    /** @var callable|null Callback for stderr output from the CLI process */
+    public $stderr = null;
+
+    public ?string $permissionPromptToolName = null;
+
+    public bool $allowDangerouslySkipPermissions = false;
+
+    public ?string $resumeSessionAt = null;
+
     public static function make(): static
     {
         return new static();
@@ -318,6 +330,65 @@ class ClaudeAgentOptions
     }
 
     /**
+     * Set a custom permission handler called before each tool use.
+     *
+     * The callable receives (string $toolName, array $toolInput) and must return
+     * a PermissionResultAllow or PermissionResultDeny instance.
+     *
+     * Uses IPC to run the callback in the parent PHP process, so closures
+     * have full access to your application (Laravel container, DB, etc.).
+     */
+    public function canUseTool(callable $handler): static
+    {
+        $this->canUseTool = $handler;
+        return $this;
+    }
+
+    /**
+     * Set a callback for stderr output from the CLI process.
+     *
+     * The callable receives (string $data) for each chunk of stderr output.
+     */
+    public function stderr(callable $callback): static
+    {
+        $this->stderr = $callback;
+        return $this;
+    }
+
+    /**
+     * Set the MCP tool name for permission prompts.
+     */
+    public function permissionPromptToolName(string $toolName): static
+    {
+        $this->permissionPromptToolName = $toolName;
+        return $this;
+    }
+
+    /**
+     * Explicitly opt-in to bypassing permissions.
+     *
+     * Must be set to true when using permission mode 'bypassPermissions'
+     * as a safety guard to prevent accidental unrestricted access.
+     */
+    public function allowDangerouslySkipPermissions(bool $allow = true): static
+    {
+        $this->allowDangerouslySkipPermissions = $allow;
+        return $this;
+    }
+
+    /**
+     * Resume a session at a specific message UUID.
+     *
+     * More granular than resume() — allows branching from a specific point
+     * in a previous conversation.
+     */
+    public function resumeSessionAt(string $messageUuid): static
+    {
+        $this->resumeSessionAt = $messageUuid;
+        return $this;
+    }
+
+    /**
      * Build CLI arguments from these options.
      */
     public function toCliArgs(): array
@@ -467,6 +538,16 @@ class ClaudeAgentOptions
                 $args[] = '--beta';
                 $args[] = $beta;
             }
+        }
+
+        if ($this->permissionPromptToolName) {
+            $args[] = '--permission-prompt-tool-name';
+            $args[] = $this->permissionPromptToolName;
+        }
+
+        if ($this->resumeSessionAt) {
+            $args[] = '--resume-session-at';
+            $args[] = $this->resumeSessionAt;
         }
 
         foreach ($this->extraArgs as $key => $value) {

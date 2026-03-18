@@ -17,12 +17,19 @@ abstract class Message
      */
     public static function fromJson(array $data): Message
     {
-        return match ($data['type'] ?? null) {
+        $type = $data['type'] ?? null;
+
+        // Handle partial/streaming messages
+        if ($type === 'stream_event') {
+            return PartialAssistantMessage::parse($data);
+        }
+
+        return match ($type) {
             'user' => UserMessage::parse($data),
             'assistant' => AssistantMessage::parse($data),
             'system' => SystemMessage::parse($data),
             'result' => ResultMessage::parse($data),
-            default => new GenericMessage($data['type'] ?? 'unknown', $data),
+            default => new GenericMessage($type ?? 'unknown', $data),
         };
     }
 }

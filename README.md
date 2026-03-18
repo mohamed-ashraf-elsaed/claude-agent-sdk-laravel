@@ -110,7 +110,10 @@ $options = ClaudeAgentOptions::make()
     ->env('MY_VAR', 'value')
     ->settingSources(['project'])
     ->useClaudeCodePrompt('Also follow PSR-12.')
-    ->betas(['context-1m-2025-08-07']);
+    ->betas(['context-1m-2025-08-07'])
+    ->permissionPromptToolName('my_custom_tool')
+    ->resumeSessionAt('2025-01-15T10:30:00Z')
+    ->allowDangerouslySkipPermissions();
 ```
 
 ### From Array
@@ -144,10 +147,38 @@ $options->useClaudeCodePrompt('Follow PSR-12 and use strict types.');
 | `acceptEdits`      | Auto-accept file edits, ask for others      |
 | `dontAsk`          | Don't ask but log decisions                 |
 | `bypassPermissions`| Skip all permission checks                  |
+| `plan`             | Create a plan but don't execute             |
+
+### Custom Permission Handler
+
+For fine-grained control over tool permissions, use `canUseTool()` to register a callback that approves, denies, or modifies each tool invocation:
+
+```php
+use ClaudeAgentSDK\Permissions\PermissionResultAllow;
+use ClaudeAgentSDK\Permissions\PermissionResultDeny;
+
+$options = ClaudeAgentOptions::make()
+    ->canUseTool(function (string $toolName, array $input) {
+        if ($toolName === 'Bash' && str_contains($input['command'] ?? '', 'rm -rf')) {
+            return new PermissionResultDeny('Destructive commands not allowed');
+        }
+        if ($toolName === 'Write') {
+            return new PermissionResultAllow(
+                updatedInput: array_merge($input, ['file_path' => '/sandbox' . $input['file_path']])
+            );
+        }
+        return new PermissionResultAllow();
+    });
+```
+
+Return `PermissionResultAllow` to approve (optionally with modified input), or `PermissionResultDeny` with a reason to block the tool call.
 
 ## Hooks
 
-Run shell commands before or after Claude uses tools:
+Run shell commands before or after Claude uses tools. The SDK supports all 12 hook events:
+
+`PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `UserPromptSubmit`, `Notification`, `SessionStart`, `SessionEnd`, `Stop`, `SubagentStart`, `SubagentStop`, `PreCompact`, `PermissionRequest`
+
 ```php
 use ClaudeAgentSDK\Hooks\HookEvent;
 use ClaudeAgentSDK\Hooks\HookMatcher;
@@ -158,7 +189,9 @@ $options = ClaudeAgentOptions::make()
     ->preToolUse('php artisan lint:check', '/Edit|Write/', 30)
     ->postToolUse('php artisan test:affected')
     // Or use hook() directly for any event
-    ->hook(HookEvent::Stop, HookMatcher::command('php /hooks/cleanup.php'));
+    ->hook(HookEvent::Stop, HookMatcher::command('php /hooks/cleanup.php'))
+    ->hook(HookEvent::SessionStart, HookMatcher::command('php /hooks/init.php'))
+    ->hook(HookEvent::SubagentStop, HookMatcher::command('php /hooks/subagent-done.php'));
 
 $result = ClaudeAgent::query('Refactor the User model', $options);
 ```
@@ -277,6 +310,13 @@ $options = ClaudeAgentOptions::make()
         url: 'http://localhost:3000/mcp',
         headers: ['Authorization' => 'Bearer ' . config('services.mcp.token')],
     ));
+
+// HTTP transport
+$options = ClaudeAgentOptions::make()
+    ->mcpServer('api', McpServerConfig::http(
+        url: 'http://localhost:3000/mcp',
+        headers: ['Authorization' => 'Bearer ' . config('services.mcp.token')],
+    ));
 ```
 
 ## Working with Results
@@ -291,6 +331,19 @@ $result->costUsd();           // float|null — total cost in USD
 $result->turns();             // int — number of conversation turns
 $result->durationMs();        // int — total duration in milliseconds
 $result->sessionId;           // string|null — for session resumption
+
+// Error types
+$result->subtype();              // 'success', 'error_max_turns', 'error_max_budget_usd', etc.
+$result->isMaxTurnsError();      // true if stopped at turn limit
+$result->isBudgetError();        // true if budget exceeded
+$result->permissionDenials();    // array of denied tool uses
+$result->errors();               // array of execution errors
+
+// Session introspection
+$result->model();                // Model used
+$result->availableTools();       // Tools available
+$result->mcpServerStatus();      // MCP server statuses
+$result->supportedCommands();    // Available slash commands
 
 // Messages
 $result->messages;            // All Message objects
@@ -385,6 +438,25 @@ $options = ClaudeAgentOptions::make()
 $options = ClaudeAgentOptions::make()
     ->model('claude-sonnet-4-5-20250929')
     ->fallbackModel('claude-haiku-4-5');
+```
+
+### Stderr Monitoring
+
+Capture diagnostic output from the Claude CLI process:
+```php
+$options = ClaudeAgentOptions::make()
+    ->stderr(function (string $data) {
+        Log::warning('Claude CLI stderr: ' . $data);
+    });
+```
+
+### Interrupt & Lifecycle
+
+Control a running Claude process programmatically:
+```php
+$manager = app('claude-agent');
+$manager->interrupt();    // Graceful interrupt (sends SIGINT to the process)
+$manager->isRunning();    // Check if a process is currently running
 ```
 
 ## Error Handling

@@ -33,8 +33,9 @@ echo $result->turns();          // e.g. 7
 - **Session Management** — Resume, fork, and continue multi-turn conversations
 - **Subagent Orchestration** — Define specialized agents that Claude delegates tasks to
 - **Structured Output** — Get validated JSON responses conforming to a JSON Schema
-- **MCP Server Integration** — Connect external tools via stdio and SSE transports
-- **Lifecycle Hooks** — Run shell commands before/after tool execution
+- **Custom Permission Handling** — Programmatic tool approval/denial via `canUseTool` with full Laravel access
+- **MCP Server Integration** — Connect external tools via stdio, SSE, and HTTP transports
+- **Full Lifecycle Events** — 12 hook events covering tool use, sessions, subagents, compaction, and permissions
 - **Budget and Cost Control** — Per-query budget limits with per-model usage tracking and cache metrics
 - **Custom API Providers** — AWS Bedrock, Google Vertex, Azure Foundry, or any Anthropic-compatible endpoint
 - **Production Ready** — Queue integration, sandboxing, permission modes, and comprehensive error handling
@@ -67,7 +68,7 @@ echo $result->turns();          // e.g. 7
 | [[Structured Output]] | JSON Schema validation, DTO mapping, schema examples |
 | [[Session Management]] | Resume, fork, and continue conversations with storage patterns |
 | [[Subagents]] | Specialized agents, orchestration patterns, model selection strategy |
-| [[Hooks]] | Pre/post tool-use hooks, all 6 events, PHP script integration |
+| [[Hooks]] | Pre/post tool-use hooks, all 12 lifecycle events, PHP script integration |
 | [[MCP Servers]] | Model Context Protocol — stdio and SSE transports, common servers |
 | [[Budget and Cost Management]] | Budget limits, token usage, cache optimization, cost monitoring |
 
