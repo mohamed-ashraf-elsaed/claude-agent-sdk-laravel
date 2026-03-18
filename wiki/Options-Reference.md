@@ -313,7 +313,7 @@ $options = ClaudeAgentOptions::make()
 
 Additional options for sandboxing, plugins, and checkpointing.
 
-- **`sandbox(array $settings): static`** -- Configure sandbox restrictions. Maps to CLI flag `--sandbox`.
+- **`sandbox(array $settings): static`** -- Configure sandbox behavior for command execution. Passed to the CLI via `--settings` as a JSON settings object. Supported keys: `enabled`, `autoAllowBashIfSandboxed`, `excludedCommands`, `allowUnsandboxedCommands`, `network`, `ignoreViolations`, `enableWeakerNestedSandbox`.
 - **`plugin(string $path): static`** -- Register a local plugin by file path. Maps to CLI flag `--plugins`.
 - **`enableFileCheckpointing(bool $enable = true): static`** -- Enable file checkpointing for rollback support. Maps to CLI flag `--enable-file-checkpointing`.
 
@@ -321,7 +321,15 @@ Additional options for sandboxing, plugins, and checkpointing.
 use ClaudeAgentSDK\Options\ClaudeAgentOptions;
 
 $options = ClaudeAgentOptions::make()
-    ->sandbox(['network' => false, 'filesystem' => 'read-only'])
+    ->sandbox([
+        'enabled' => true,
+        'autoAllowBashIfSandboxed' => true,
+        'excludedCommands' => ['docker'],
+        'network' => [
+            'allowLocalBinding' => true,
+            'allowUnixSockets' => ['/var/run/docker.sock'],
+        ],
+    ])
     ->plugin(base_path('claude-plugins/custom-linter.js'))
     ->enableFileCheckpointing();
 ```
@@ -409,7 +417,7 @@ $env = $options->toEnv(['HOME' => '/home/app']);
 | `env(key, value)` | Set environment variable | Process env |
 | `user(string)` | Set user ID | `--user` |
 | `extraArg(flag, value?)` | Any arbitrary CLI flag | `--{flag}` |
-| `sandbox(array)` | Sandbox configuration | `--sandbox` |
+| `sandbox(array)` | Sandbox configuration | `--settings` (JSON) |
 | `plugin(string)` | Add a local plugin | `--plugins` |
 | `enableFileCheckpointing(bool)` | Enable file checkpointing | `--enable-file-checkpointing` |
 | `static make()` | Create new options instance | -- |

@@ -358,9 +358,17 @@ Options passed to `query()` override config defaults.
 
 ## Advanced: Sandbox, Plugins & Betas
 ```php
-// Run in a sandboxed environment
+// Run in a sandboxed environment with command isolation
 $options = ClaudeAgentOptions::make()
-    ->sandbox(['type' => 'docker', 'image' => 'php:8.3-cli']);
+    ->sandbox([
+        'enabled' => true,
+        'autoAllowBashIfSandboxed' => true,
+        'excludedCommands' => ['docker'],
+        'network' => [
+            'allowLocalBinding' => true,
+            'allowUnixSockets' => ['/var/run/docker.sock'],
+        ],
+    ]);
 
 // Load a local plugin
 $options = ClaudeAgentOptions::make()
