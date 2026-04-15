@@ -12,7 +12,7 @@ Build AI agents with Claude Code as a library in your Laravel applications. This
 ## Requirements
 
 - PHP 8.1+
-- Laravel 10, 11, or 12
+- Laravel 10, 11, or 12 and 13
 - Claude Code CLI (`npm install -g @anthropic-ai/claude-code`)
 - Anthropic API key
 
