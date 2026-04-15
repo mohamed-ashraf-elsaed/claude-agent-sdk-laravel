@@ -67,4 +67,4 @@ vendor/bin/phpunit --coverage-html coverage/
 
 ## CI
 
-GitHub Actions runs PHPUnit across PHP 8.1–8.4 and Laravel 10–12 (excluding PHP 8.1 + Laravel 11/12).
+GitHub Actions runs PHPUnit across PHP 8.1–8.4 and Laravel 10–13 (excluding PHP 8.1 + Laravel 11/12/13, PHP 8.2 + Laravel 13).
