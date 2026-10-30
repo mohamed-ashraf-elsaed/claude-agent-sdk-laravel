@@ -505,3 +505,7 @@ Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for gui
 ## License
 
 MIT — see [LICENSE](LICENSE) for details.
+
+## Author
+
+Made by [Mohamed Ashraf Elsaed](https://mohamedashrafelsaed.com), technical lead and backend architect in Cairo. Project page and more tools: [mohamedashrafelsaed.com/projects/claude-agent-sdk-laravel/](https://mohamedashrafelsaed.com/projects/claude-agent-sdk-laravel/).
