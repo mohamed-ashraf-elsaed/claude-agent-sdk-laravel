@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.2] - 2026-11-01
+
+### Changed
+- Package metadata only: the Composer `homepage` now points to the project page at mohamedashrafelsaed.com, and the author is listed as Mohamed Ashraf Elsaed with a homepage and contact email. No code changes.
+
 ## [1.2.0] - 2026-02-26
 
 ### Added
