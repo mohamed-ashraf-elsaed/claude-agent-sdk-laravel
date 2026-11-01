@@ -58,7 +58,7 @@ vendor/bin/phpunit --coverage-html coverage/
 
 ## Conventions
 
-- **PHP 8.1+** with readonly properties and named constructor arguments
+- **PHP 8.2+** with readonly properties and named constructor arguments
 - **PSR-12** coding standard
 - **Naming:** PascalCase classes, camelCase methods/properties, snake_case config keys, snake_case test methods (`test_parses_text_block`)
 - **Commit messages:** Conventional Commits — `feat(scope): description`, `fix(scope): description`
@@ -67,4 +67,4 @@ vendor/bin/phpunit --coverage-html coverage/
 
 ## CI
 
-GitHub Actions runs PHPUnit across PHP 8.1–8.4 and Laravel 10–13 (excluding PHP 8.1 + Laravel 11/12/13, PHP 8.2 + Laravel 13).
+GitHub Actions runs PHPUnit across PHP 8.2–8.4 and Laravel 12–13 (excluding PHP 8.2 + Laravel 13).

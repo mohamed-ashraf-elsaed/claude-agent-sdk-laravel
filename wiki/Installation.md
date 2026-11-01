@@ -10,8 +10,8 @@ The SDK bridges Laravel with Anthropic's Claude Code CLI. You install the CLI (N
 
 | Requirement | Supported Versions |
 |---|---|
-| PHP | 8.1, 8.2, 8.3, 8.4 |
-| Laravel | 10.x, 11.x, 12.x |
+| PHP | 8.2, 8.3, 8.4 |
+| Laravel | 12.x, 13.x |
 | Node.js (for CLI) | 18 LTS or later |
 
 **Composer dependencies** (resolved automatically): `illuminate/support`, `illuminate/contracts`, `symfony/process`.

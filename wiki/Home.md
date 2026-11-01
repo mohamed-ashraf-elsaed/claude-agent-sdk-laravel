@@ -1,6 +1,6 @@
 # Claude Agent SDK for Laravel
 
-[![Tests](https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel/actions/workflows/tests.yml/badge.svg)](https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel/actions) [![Latest Version](https://img.shields.io/packagist/v/mohamed-ashraf-elsaed/claude-agent-sdk-laravel)](https://packagist.org/packages/mohamed-ashraf-elsaed/claude-agent-sdk-laravel) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![PHP 8.1+](https://img.shields.io/badge/PHP-8.1%2B-777BB4)](https://php.net) [![Laravel 10/11/12](https://img.shields.io/badge/Laravel-10%20%7C%2011%20%7C%2012-FF2D20)](https://laravel.com)
+[![Tests](https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel/actions/workflows/tests.yml/badge.svg)](https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel/actions) [![Latest Version](https://img.shields.io/packagist/v/mohamed-ashraf-elsaed/claude-agent-sdk-laravel)](https://packagist.org/packages/mohamed-ashraf-elsaed/claude-agent-sdk-laravel) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![PHP 8.2+](https://img.shields.io/badge/PHP-8.2%2B-777BB4)](https://php.net) [![Laravel 12/13](https://img.shields.io/badge/Laravel-12%20%7C%2013-FF2D20)](https://laravel.com)
 
 > Build AI agents powered by Claude Code directly in your Laravel applications.
 
@@ -93,8 +93,8 @@ echo $result->turns();          // e.g. 7
 
 | Requirement | Version |
 |------------|---------|
-| PHP | 8.1, 8.2, 8.3, 8.4 |
-| Laravel | 10, 11, 12 |
+| PHP | 8.2, 8.3, 8.4 |
+| Laravel | 12, 13 |
 | Claude Code CLI | Latest (`npm install -g @anthropic-ai/claude-code`) |
 | Anthropic API Key | From [console.anthropic.com](https://console.anthropic.com) |
 

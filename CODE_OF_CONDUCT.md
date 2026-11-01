@@ -30,7 +30,7 @@ This Code of Conduct applies in all project spaces — including issues, pull re
 
 Instances of unacceptable behavior may be reported to the project maintainer:
 
-**Mohamed Ashraf** — [m.ashraf.saed@gmail.com](mailto:m.ashraf.saed@gmail.com)
+**Mohamed Ashraf Elsaed** — [m.ashraf.saed@gmail.com](mailto:m.ashraf.saed@gmail.com)
 
 All reports will be reviewed promptly and confidentially. The maintainer reserves the right to remove, edit, or reject contributions that violate this Code of Conduct, and to temporarily or permanently ban contributors for repeated or severe violations.
 

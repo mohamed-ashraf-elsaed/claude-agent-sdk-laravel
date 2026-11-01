@@ -3,11 +3,13 @@
   "description": "Anthropic Claude Agent SDK for PHP & Laravel — build AI agents with tool use, sandboxing, MCP servers, subagents, hooks, and structured output via the Claude Code CLI",
   "keywords": ["laravel", "claude", "ai", "agent", "anthropic", "sdk", "claude-code", "llm", "ai-agent", "mcp", "laravel-package", "php-sdk", "agentic-ai", "automation", "code-generation", "anthropic-sdk", "claude-agent", "ai-sdk", "claude-api", "php-ai", "ai-tools", "claude-laravel"],
   "license": "MIT",
-  "homepage": "https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel",
+  "homepage": "https://mohamedashrafelsaed.com/projects/claude-agent-sdk-laravel/",
   "authors": [
     {
-      "name": "Mohamed Ashraf",
-      "email": "m.ashraf.saed@gmail.com"
+      "name": "Mohamed Ashraf Elsaed",
+      "email": "hello@mohamedashrafelsaed.com",
+      "homepage": "https://mohamedashrafelsaed.com",
+      "role": "Developer"
     }
   ],
   "support": {
@@ -16,13 +18,13 @@
     "docs": "https://github.com/mohamed-ashraf-elsaed/claude-agent-sdk-laravel/wiki"
   },
   "require": {
-    "php": "^8.1|^8.2|^8.3|^8.4",
-    "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
-    "illuminate/contracts": "^10.0|^11.0|^12.0|^13.0",
+    "php": "^8.2|^8.3|^8.4",
+    "illuminate/support": "^12.0|^13.0",
+    "illuminate/contracts": "^12.0|^13.0",
     "symfony/process": "^6.0|^7.0|^8.0"
   },
   "require-dev": {
-    "orchestra/testbench": "^8.0|^9.0|^10.0|^11.0",
+    "orchestra/testbench": "^10.0|^11.0",
     "phpunit/phpunit": "^10.0|^11.0",
     "mockery/mockery": "^1.6"
   },

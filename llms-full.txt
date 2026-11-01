@@ -119,6 +119,6 @@ php artisan vendor:publish --tag=claude-agent-config
 Config file: config/claude-agent.php
 
 ## Supported
-- PHP 8.1, 8.2, 8.3, 8.4
-- Laravel 10, 11, 12
+- PHP 8.2, 8.3, 8.4
+- Laravel 12, 13
 - Providers: Anthropic API, AWS Bedrock, Google Vertex, Azure Foundry
