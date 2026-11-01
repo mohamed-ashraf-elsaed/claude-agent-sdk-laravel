@@ -2,10 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.3.2] - 2026-11-01
+## [1.4.0] - 2026-11-01
+
+### Removed
+- Laravel 10 and 11 support (end of life; every release has open security advisories). The package now requires Laravel 12 or 13, and therefore PHP 8.2 or higher. The CI matrix and the docs follow.
 
 ### Changed
-- Package metadata only: the Composer `homepage` now points to the project page at mohamedashrafelsaed.com, and the author is listed as Mohamed Ashraf Elsaed with a homepage and contact email. No code changes.
+- Package metadata: the Composer `homepage` now points to the project page at mohamedashrafelsaed.com, and the author is listed as Mohamed Ashraf Elsaed with a homepage and contact email.
 
 ## [1.2.0] - 2026-02-26
 

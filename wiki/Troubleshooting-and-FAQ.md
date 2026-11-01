@@ -54,7 +54,7 @@ If running in a container, ensure the binary is installed during the Docker buil
 
 ### Composer Dependency Conflicts
 
-**Cause:** Version constraints in your `composer.json` conflict with the SDK's requirements (PHP 8.1+, certain Symfony Process versions).
+**Cause:** Version constraints in your `composer.json` conflict with the SDK's requirements (PHP 8.2+, Laravel 12 or 13, certain Symfony Process versions).
 
 **Solutions:**
 
@@ -296,7 +296,7 @@ ANTHROPIC_AUTH_TOKEN=your-bearer-token
 ## Frequently Asked Questions
 
 **Does the SDK support PHP 8.0?**
-No. PHP 8.1 or higher is required due to the use of enums, readonly properties, fibers, and intersection types.
+No. PHP 8.2 or higher is required. The SDK supports Laravel 12 and 13, which need PHP 8.2 or higher.
 
 **Can I use the SDK without Laravel?**
 Yes. Instantiate `ClaudeAgentManager` directly without the service provider:

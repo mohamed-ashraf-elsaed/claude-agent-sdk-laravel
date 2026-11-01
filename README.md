@@ -4,15 +4,15 @@
 [![Latest Version](https://img.shields.io/packagist/v/mohamed-ashraf-elsaed/claude-agent-sdk-laravel.svg)](https://packagist.org/packages/mohamed-ashraf-elsaed/claude-agent-sdk-laravel)
 [![Total Downloads](https://img.shields.io/packagist/dt/mohamed-ashraf-elsaed/claude-agent-sdk-laravel.svg)](https://packagist.org/packages/mohamed-ashraf-elsaed/claude-agent-sdk-laravel)
 [![PHP Version](https://img.shields.io/packagist/php-v/mohamed-ashraf-elsaed/claude-agent-sdk-laravel.svg)](https://packagist.org/packages/mohamed-ashraf-elsaed/claude-agent-sdk-laravel)
-[![Laravel](https://img.shields.io/badge/Laravel-10%20|%2011%20|%2012%20|%2013-red.svg)](https://laravel.com)
+[![Laravel](https://img.shields.io/badge/Laravel-12%20|%2013-red.svg)](https://laravel.com)
 [![License](https://img.shields.io/packagist/l/mohamed-ashraf-elsaed/claude-agent-sdk-laravel.svg)](LICENSE)
 
 Build AI agents with Claude Code as a library in your Laravel applications. This SDK wraps the Claude Code CLI to give your app access to file operations, bash commands, code editing, web search, subagents, and more.
 
 ## Requirements
 
-- PHP 8.1+
-- Laravel 10, 11, or 12 and 13
+- PHP 8.2+
+- Laravel 12 or 13
 - Claude Code CLI (`npm install -g @anthropic-ai/claude-code`)
 - Anthropic API key
 
